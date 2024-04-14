@@ -13,6 +13,8 @@ pub mod error;
 mod private;
 pub mod traits;
 
+use std::fs;
+
 use error::Error;
 #[cfg(feature = "image")]
 use image::{DynamicImage, ImageFormat};
@@ -321,7 +323,7 @@ impl Default for Exolvl {
                 prefabs: Default::default(),
                 brushes: Default::default(),
                 patterns: Default::default(),
-                colour_palette: Some(Default::default()),
+                color_palette: Some(Default::default()),
                 author_time: Default::default(),
                 author_lap_times: Default::default(),
                 silver_medal_time: Default::default(),
@@ -332,15 +334,15 @@ impl Default for Exolvl {
                 nova_scripts: Default::default(),
                 global_variables: Default::default(),
                 theme: "mountains".to_string(),
-                custom_background_colour: Default::default(),
+                custom_background_color: Default::default(),
                 unknown1: [0; 4],
                 custom_terrain_pattern_id: Default::default(),
                 custom_terrain_pattern_tiling: Default::default(),
                 custom_terrain_pattern_offset: Default::default(),
-                custom_terrain_colour: Default::default(),
+                custom_terrain_color: Default::default(),
                 custom_terrain_secondary_color: Default::default(),
                 custom_terrain_blend_mode: Default::default(),
-                custom_terrain_border_colour: Default::default(),
+                custom_terrain_border_color: Default::default(),
                 custom_terrain_border_thickness: Default::default(),
                 custom_terrain_border_corner_radius: Default::default(),
                 custom_terrain_round_reflex_angles: Default::default(),
@@ -356,6 +358,28 @@ impl Default for Exolvl {
             },
             author_replay: AuthorReplay(Default::default()),
         }
+    }
+}
+
+impl Exolvl {
+    pub fn read_from_path(path: &str) -> Result<Self, Error>{
+        let file = fs::File::open(path)?;
+        let mut file = flate2::read::GzDecoder::new(file);
+        Exolvl::read(&mut file)
+    }
+
+    pub fn write_to_file(&mut self, path: &str) -> Result<(), Error>{
+        let file = match fs::File::open(path) {
+            Ok( .. ) => {
+                fs::remove_file(path)?;
+                fs::File::create_new(path)?
+            },
+            Err( .. ) => fs::File::create_new(path)?
+        };
+        // Weirdly enough, this isnt the same compression level as the .exolvl files normally are, but it still works.
+        let mut gzfile = flate2::write::GzEncoder::new(file, flate2::Compression::best());
+        self.write(&mut gzfile)?;
+        Ok(())
     }
 }
 /// The local level data for this level.
@@ -493,10 +517,10 @@ pub struct LevelData {
     pub brushes: Vec<Brush>,
     /// The patterns in the level.
     pub patterns: Vec<Pattern>,
-    /// The colour palettes in the level.
+    /// The color palettes in the level.
     ///
     /// This is only present in levels with version 17 or higher.
-    pub colour_palette: Option<Vec<Colour>>,
+    pub color_palette: Option<Vec<Color>>,
     /// The author medal time for this level in milliseconds.
     pub author_time: i64,
     /// The author medal lap times for this level in milliseconds.
@@ -523,29 +547,29 @@ pub struct LevelData {
     pub global_variables: Vec<Variable>,
     /// The theme name of the level.
     pub theme: String,
-    /// The custom background colour of the level.
-    pub custom_background_colour: Colour,
+    /// The custom background color of the level.
+    pub custom_background_color: Color,
 
     /// Unknown data.
     unknown1: [u8; 4],
     /// The following terrain related fields are all used when explicitly copying certain terrain data.
     /// 
-    /// The custom terrain pattern that can be pasted with the colour_paste button if the recieving object has the FillMode set to `Pattern`.
+    /// The custom terrain pattern that can be pasted with the color_paste button if the recieving object has the FillMode set to `Pattern`.
     pub custom_terrain_pattern_id: i32,
     /// The tiling of that pattern.
     pub custom_terrain_pattern_tiling: Vec2,
     /// the offset of that pattern.
     pub custom_terrain_pattern_offset: Vec2,
-    /// In the legacy editor: The custom terrain colour of the level.
-    /// In the new editor: The colour of the copied terrain.
-    pub custom_terrain_colour: Colour,
+    /// In the legacy editor: The custom terrain color of the level.
+    /// In the new editor: The color of the copied terrain.
+    pub custom_terrain_color: Color,
     /// Not 100% sure of the use of this, presumably the replacement for the border color in the new editor.
     /// Used when copying and pasting properties of terrain.
-    pub custom_terrain_secondary_color: Colour,
+    pub custom_terrain_secondary_color: Color,
     /// The blend mode of the copied terrain.
     pub custom_terrain_blend_mode: i32,
-    /// The custom terrain border colour of the level.
-    pub custom_terrain_border_colour: Colour,
+    /// The custom terrain border color of the level.
+    pub custom_terrain_border_color: Color,
     /// The thickness of the terrain border.
     pub custom_terrain_border_thickness: f32,
     /// The corner radius of the terrain border.
@@ -592,7 +616,7 @@ impl ReadVersioned for LevelData {
             prefabs: Read::read(input)?,
             brushes: Read::read(input)?,
             patterns: Read::read(input)?,
-            colour_palette: if version >= 17 {
+            color_palette: if version >= 17 {
                 Some(Read::read(input)?)
             } else {
                 None
@@ -607,15 +631,15 @@ impl ReadVersioned for LevelData {
             nova_scripts: Read::read(input)?,
             global_variables: Read::read(input)?,
             theme: Read::read(input)?,
-            custom_background_colour: Read::read(input)?,
+            custom_background_color: Read::read(input)?,
             unknown1: Read::read(input)?,
             custom_terrain_pattern_id: Read::read(input)?,
             custom_terrain_pattern_tiling: Read::read(input)?,
             custom_terrain_pattern_offset: Read::read(input)?,
-            custom_terrain_colour: Read::read(input)?,
+            custom_terrain_color: Read::read(input)?,
             custom_terrain_secondary_color: Read::read(input)?,
             custom_terrain_blend_mode: Read::read(input)?,
-            custom_terrain_border_colour: Read::read(input)?,
+            custom_terrain_border_color: Read::read(input)?,
             custom_terrain_border_thickness: Read::read(input)?,
             custom_terrain_border_corner_radius: Read::read(input)?,
             custom_terrain_round_reflex_angles: Read::read(input)?,
@@ -648,8 +672,8 @@ impl Write for LevelData {
         self.prefabs.write(output)?;
         self.brushes.write(output)?;
         self.patterns.write(output)?;
-        if let Some(colour_palette) = &self.colour_palette {
-            colour_palette.write(output)?;
+        if let Some(color_palette) = &self.color_palette {
+            color_palette.write(output)?;
         }
         self.author_time.write(output)?;
         self.author_lap_times.write(output)?;
@@ -661,15 +685,15 @@ impl Write for LevelData {
         self.nova_scripts.write(output)?;
         self.global_variables.write(output)?;
         self.theme.write(output)?;
-        self.custom_background_colour.write(output)?;
+        self.custom_background_color.write(output)?;
         self.unknown1.write(output)?;
         self.custom_terrain_pattern_id.write(output)?;
         self.custom_terrain_pattern_tiling.write(output)?;
         self.custom_terrain_pattern_offset.write(output)?;
-        self.custom_terrain_colour.write(output)?;
+        self.custom_terrain_color.write(output)?;
         self.custom_terrain_secondary_color.write(output)?;
         self.custom_terrain_blend_mode.write(output)?;
-        self.custom_terrain_border_colour.write(output)?;
+        self.custom_terrain_border_color.write(output)?;
         self.custom_terrain_border_thickness.write(output)?;
         self.custom_terrain_border_corner_radius.write(output)?;
         self.custom_terrain_round_reflex_angles.write(output)?;
@@ -864,16 +888,22 @@ impl Default for Vec2 {
     }
 }
 
+impl Vec2 {
+    pub fn new(x: f32, y: f32) -> Self {
+        Self { x, y }
+    }
+}
+
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Clone, Copy, Debug)]
-pub struct Colour {
+pub struct Color {
     pub r: f32,
     pub g: f32,
     pub b: f32,
     pub a: f32,
 }
 
-impl Read for Colour {
+impl Read for Color {
     fn read(input: &mut impl std::io::Read) -> Result<Self, Error> {
         Ok(Self {
             r: Read::read(input)?,
@@ -884,7 +914,7 @@ impl Read for Colour {
     }
 }
 
-impl Write for Colour {
+impl Write for Color {
     fn write(&self, output: &mut impl std::io::Write) -> Result<(), Error> {
         self.r.write(output)?;
         self.g.write(output)?;
@@ -893,7 +923,7 @@ impl Write for Colour {
     }
 }
 
-impl Default for Colour {
+impl Default for Color {
     fn default() -> Self {
         Self {
             r: 0.0,
@@ -924,7 +954,7 @@ impl Write for AuthorReplay {
 #[derive(Clone, Debug)]
 pub struct Object {
     pub entity_id: i32,
-    pub tile_id: i32,
+    pub tile_id: ObjectTileId,
     pub prefab_entity_id: i32,
     pub prefab_id: i32,
     pub position: Vec2,
@@ -973,13 +1003,235 @@ impl Write for Object {
     }
 }
 
+macro_rules! define_object_tile_id {
+    ($($name:ident = $number:expr),*) => {
+        #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+        #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
+        pub enum ObjectTileId {
+            $($name = $number),*
+        }
+
+        impl TryFrom<i32> for ObjectTileId {
+            type Error = ();
+
+            fn try_from(value: i32) -> Result<Self, Self::Error> {
+                match value {
+                    $($number => Ok(ObjectTileId::$name),)*
+                    _ => Err(())
+                }
+            }
+        }
+
+        impl From<&ObjectTileId> for i32 {
+            fn from(value: &ObjectTileId) -> Self {
+                match value {
+                    $(ObjectTileId::$name => $number,)*
+                }
+            }
+        }
+    };
+}
+
+define_object_tile_id!(
+    Terrain = 1078723247,
+    TerrainRightTriangle = -1904467130,
+    TerrainRightTriangle90 = 1470394341,
+    TerrainRightTriangle180 = -1488316906,
+    TerrainRightTriangle270 = -464756446,
+    TerrainBridgeTop = -75331496,
+    TerrainBridgeMiddle = -2147154161,
+    TerrainBridgeBottom = 1455964140,
+    TerrainWallLeft = -1695726836,
+    TerrainWallRight = 1899249117,
+    TerrainWallCenter = 1848566125,
+    SpawnRight = -1356673834,
+    SpawnLeft = -2104783614,
+    EndFlag = -957301678,
+    EndFlag90 = -368554856,
+    EndFlag180 = 1616903581,
+    EndFlag270 = -174650371,
+    Grabber = 1873811173,
+    GrabberFlip = 2016994698,
+    Grabber90 = -536717004,
+    GrabberFlip90 = 759250406,
+    Bumper = 968991814,
+    Bumper90 = 1256971976,
+    Bumper180 = 286166962,
+    Bumper270 = 678667577,
+    Switcher = 1209212500,
+    SwitcherFlip = 970946753,
+    Switcher90 = -1930559234,
+    SwitcherFlip90 = -1316016952,
+    Switcher180 = -1885291810,
+    SwitcherFlip180 = -1730457138,
+    Switcher270 = 79288520,
+    SwitcherFlip270 = -1829023042,
+    Booster = -1162017657,
+    BoosterFlip = 980351413,
+    Booster90 = -2064406063,
+    BoosterFlip90 = -1493226159,
+    Booster180 = 1125065540,
+    BoosterFlip180 = -2023480174,
+    Booster270 = 39055262,
+    BoosterFlip270 = -329653198,
+    HookAnchor = 368289199,
+    DoubleJumper = 1487075964,
+    DoubleJumper90 = 1646408642,
+    DoubleJumper180 = 2115137254,
+    DoubleJumper270 = -385295808,
+    Dasher = -956427239,
+    Dasher90 = -1901440810,
+    Dasher180 = -618576420,
+    Dasher270 = 1457249366,
+    Fan = 1652957997,
+    Fan90 = 1954424648,
+    Fan180 = 1603987169,
+    Fan270 = -886048645,
+    FloatingZone = 2127631306,
+    Slingshot = 358722333,
+    Slingshot90 = 1308719934,
+    Slingshot180 = 1611983220,
+    Slingshot270 = 1021410890,
+    Button = 2032583278,
+    Button90 = 1092404659,
+    Button180 = 919160669,
+    Button270 = 1399300457,
+    Door = -433729213,
+    Door90 = 581002357,
+    RevivePad = 1135615979,
+    RevivePad90 = 667829449,
+    RevivePad180 = 371982216,
+    RevivePad270 = 698312464,
+    Checkpoint = 1127718751,
+    Checkpoint90 = -1195788002,
+    Checkpoint180 = -1241376005,
+    Checkpoint270 = -1381750767,
+    CheckpointOrb = -152083769,
+    GravityPortal = 2064547365,
+    GravityPortal90 = 2116407709,
+    Ice = 95636698,
+    IceRightTriangle = 2077933161,
+    IceRightTriangle90 = 1480317903,
+    IceRightTriangle180 = 1699758979,
+    IceRightTriangle270 = 1746446512,
+    IceSlopeIn = 1191037697,
+    IceSlopeInFlip = -1979821018,
+    IceSlopeIn90 = -2135841768,
+    IceSlopeInFlip90 = 1656564393,
+    IceSlopeIn180 = 714706500,
+    IceSlopeInFlip180 = 533396868,
+    IceSlopeIn270 = -1285793553,
+    IceSlopeInFlip270 = -1492534997,
+    IceSlopeOut = -1885590070,
+    IceSlopeOutFlip = -273598634,
+    IceSlopeOut90 = 741289287,
+    IceSlopeOutFlip90 = 302597122,
+    IceSlopeOut180 = 2004228293,
+    IceSlopeOutFlip180 = -989728521,
+    IceSlopeOut270 = -1868478563,
+    IceSlopeOutFlip270 = -1406297645,
+    IceSlope = -2071698530,
+    IceSlope90 = 258071606,
+    IceSlope180 = 2036775213,
+    IceSlope270 = 1393198333,
+    
+
+    KillerSpike = -1832408413,
+    KillerSpike90 = -1789668358,
+    KillerSpike180 = -1800631278,
+    KillerSpike270 = 1422770095,
+    KillerBlock = -123683330,
+    KillerSaw = 85353959,
+    KillerSaw90 = -84282781,
+    KillerSaw180 = -1790928268,
+    KillerSaw270 = 1941275399,
+    KillerSawBig = -1385136225,
+    KillerSawBig90 = 1609812870,
+    KillerSawBig180 = -1582901038,
+    KillerSawBig270 = -345312146,
+    KillerSawFull = -1358408877,
+    KillerSawFullBig = -1727849296,
+    SpriteSquare = 113491821,
+    SpriteSquareOutline = 1296081014,
+    SpriteRoundedSquare = -1718767673,
+    SpriteRoundedSquareOutline = -168878848,
+    SpriteCircle = -284493993,
+    SpriteCircleOutline = 2044847310,
+    SpriteSemicircle = 162939366,
+    SpriteSemicircle90 = -619270393,
+    SpriteSemicircle180 = 936710871,
+    SpriteSemicircle270 = -2122278412,
+    SpriteSemicircleOutline = -1628209802,
+    SpriteSemicircleOutline90 = -1140350636,
+    SpriteSemicircleOutline180 = 278022153,
+    SpriteSemicircleOutline270 = 118137802,
+    SpriteQuartercircle = 1417850755,
+    SpriteQuartercircle90 = 1272863854,
+    SpriteQuartercircle180 = 1318335448,
+    SpriteQuartercircle270 = 1714711440,
+    SpriteQuartercircleOutline = -2086966633,
+    SpriteQuartercircleOutline90 = -2125743891,
+    SpriteQuartercircleOutline180 = 1401774077,
+    SpriteQuartercircleOutline270 = -359202566,
+    SpriteTriangle = -2029048382,
+    SpriteTriangle90 = 1217578697,
+    SpriteTriangle180 = -1189381130,
+    SpriteTriangle270 = 1849138844,
+    SpriteRightTriangle = -319845761,
+    SpriteRightTriangle90 = 64470063,
+    SpriteRightTriangle180 = 120767220,
+    SpriteRightTriangle270 = -485054060,
+    SpritePentagon = -27695691,
+    SpriteHexagon = -2142882175,
+    SpriteHeptagon = -1221109328,
+    SpriteOctagon = -1838047745,
+    SpriteTrapezoid = -861526936,
+    SpriteTrapezoid90 = 1718359304,
+    SpriteTrapezoid180 = -1030637625,
+    SpriteTrapezoid270 = 805033788,
+    SpriteStar = -1686819095,
+    SpriteStar4 = 512116583,
+    SpriteStar6 = 1082987055,
+    SpriteCross = -131202067,
+    SpriteHeart = 471260314,
+    SpriteMoon = -1624426220,
+    SpriteMoonFlip = -1067600395,
+    SpriteRhombus = 1539249723,
+    SpriteDrop = 1568183189,
+    SpriteSlope = 444076002,
+    SpriteSlope90 = -310297049,
+    SpriteSlope180 = -684763610,
+    SpriteSlope270 = 2089430495,
+    Image = 1718870758,
+    Text = 589791300,
+    Unit = 1787069168,
+    Area = -1658710071,
+    Point = 1514078320,
+    ParticleSystem = -2072865068,
+    Group = 1944401040
+);
+
+impl Read for ObjectTileId {
+    fn read(input: &mut impl std::io::Read) -> Result<Self, Error> {
+        let value = i32::read(input)?;
+
+        Self::try_from(value).map_err(|()| Error::InvalidOldActionType(value))
+    }
+}
+
+impl Write for ObjectTileId {
+    fn write(&self, output: &mut impl std::io::Write) -> Result<(), Error> {
+        i32::from(self).write(output)
+    }
+}
+
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Clone, Debug)]
 pub enum ObjectProperty {
-    Colour(Colour),
+    Color(Color),
     Resolution(i32),
     FillMode(i32),
-    SecondaryColour(Colour),
+    SecondaryColor(Color),
     Thickness(f32),
     TotalAngle(i32),
     Corners(i32),
@@ -988,7 +1240,7 @@ pub enum ObjectProperty {
     CornerRadius(f32),
     Width(f32),
     Height(f32),
-    BorderColour(Colour),
+    BorderColor(Color),
     BorderThickness(f32),
     PhysicsType(i32),
     Friction(f32),
@@ -1019,10 +1271,10 @@ pub enum ObjectProperty {
     FlipY(bool),
     Text(String),
     FontSize(f32),
-    EditorColour(Colour),
-    Colour2(Colour),
-    Colour3(Colour),
-    Colour4(Colour),
+    EditorColor(Color),
+    Color2(Color),
+    Color3(Color),
+    Color4(Color),
     ParticleTexture(String),
     Duration(f32),
     Delay(f32),
@@ -1049,9 +1301,9 @@ pub enum ObjectProperty {
     RotationMin(f32),
     RotationMax(f32),
     Rotationspeed(f32),
-    ColourOverLifetime(bool),
-    StartColourMultiplier(Colour),
-    EndColourMultiplier(Colour),
+    ColorOverLifetime(bool),
+    StartColorMultiplier(Color),
+    EndColorMultiplier(Color),
     GravityMultiplier(f32),
     AnchorPos(Vec2),
     MoonInnerRadius(f32),
@@ -1063,10 +1315,10 @@ impl Read for ObjectProperty {
         let property_type = Read::read(input)?;
 
         Ok(match property_type {
-            0 => Self::Colour(Read::read(input)?),
+            0 => Self::Color(Read::read(input)?),
             1 => Self::Resolution(Read::read(input)?),
             2 => Self::FillMode(Read::read(input)?),
-            3 => Self::SecondaryColour(Read::read(input)?),
+            3 => Self::SecondaryColor(Read::read(input)?),
             4 => Self::Thickness(Read::read(input)?),
             5 => Self::TotalAngle(Read::read(input)?),
             6 => Self::Corners(Read::read(input)?),
@@ -1075,7 +1327,7 @@ impl Read for ObjectProperty {
             9 => Self::CornerRadius(Read::read(input)?),
             10 => Self::Width(Read::read(input)?),
             11 => Self::Height(Read::read(input)?),
-            12 => Self::BorderColour(Read::read(input)?),
+            12 => Self::BorderColor(Read::read(input)?),
             13 => Self::BorderThickness(Read::read(input)?),
             14 => Self::PhysicsType(Read::read(input)?),
             15 => Self::Friction(Read::read(input)?),
@@ -1106,10 +1358,10 @@ impl Read for ObjectProperty {
             44 => Self::FlipY(Read::read(input)?),
             45 => Self::Text(Read::read(input)?),
             46 => Self::FontSize(Read::read(input)?),
-            47 => Self::EditorColour(Read::read(input)?),
-            48 => Self::Colour2(Read::read(input)?),
-            49 => Self::Colour3(Read::read(input)?),
-            50 => Self::Colour4(Read::read(input)?),
+            47 => Self::EditorColor(Read::read(input)?),
+            48 => Self::Color2(Read::read(input)?),
+            49 => Self::Color3(Read::read(input)?),
+            50 => Self::Color4(Read::read(input)?),
             51 => Self::ParticleTexture(Read::read(input)?),
             52 => Self::Duration(Read::read(input)?),
             53 => Self::Delay(Read::read(input)?),
@@ -1136,9 +1388,9 @@ impl Read for ObjectProperty {
             75 => Self::RotationMin(Read::read(input)?),
             76 => Self::RotationMax(Read::read(input)?),
             77 => Self::Rotationspeed(Read::read(input)?),
-            78 => Self::ColourOverLifetime(Read::read(input)?),
-            79 => Self::StartColourMultiplier(Read::read(input)?),
-            80 => Self::EndColourMultiplier(Read::read(input)?),
+            78 => Self::ColorOverLifetime(Read::read(input)?),
+            79 => Self::StartColorMultiplier(Read::read(input)?),
+            80 => Self::EndColorMultiplier(Read::read(input)?),
             81 => Self::GravityMultiplier(Read::read(input)?),
             82 => Self::AnchorPos(Read::read(input)?),
             83 => Self::MoonInnerRadius(Read::read(input)?),
@@ -1151,7 +1403,7 @@ impl Read for ObjectProperty {
 impl Write for ObjectProperty {
     fn write(&self, output: &mut impl std::io::Write) -> Result<(), Error> {
         match self {
-            Self::Colour(value) => {
+            Self::Color(value) => {
                 0.write(output)?;
                 value.write(output)
             }
@@ -1163,7 +1415,7 @@ impl Write for ObjectProperty {
                 2.write(output)?;
                 value.write(output)
             }
-            Self::SecondaryColour(value) => {
+            Self::SecondaryColor(value) => {
                 3.write(output)?;
                 value.write(output)
             }
@@ -1199,7 +1451,7 @@ impl Write for ObjectProperty {
                 11.write(output)?;
                 value.write(output)
             }
-            Self::BorderColour(value) => {
+            Self::BorderColor(value) => {
                 12.write(output)?;
                 value.write(output)
             }
@@ -1323,19 +1575,19 @@ impl Write for ObjectProperty {
                 46.write(output)?;
                 value.write(output)
             }
-            Self::EditorColour(value) => {
+            Self::EditorColor(value) => {
                 47.write(output)?;
                 value.write(output)
             }
-            Self::Colour2(value) => {
+            Self::Color2(value) => {
                 48.write(output)?;
                 value.write(output)
             }
-            Self::Colour3(value) => {
+            Self::Color3(value) => {
                 49.write(output)?;
                 value.write(output)
             }
-            Self::Colour4(value) => {
+            Self::Color4(value) => {
                 50.write(output)?;
                 value.write(output)
             }
@@ -1443,15 +1695,15 @@ impl Write for ObjectProperty {
                 77.write(output)?;
                 value.write(output)
             }
-            Self::ColourOverLifetime(value) => {
+            Self::ColorOverLifetime(value) => {
                 78.write(output)?;
                 value.write(output)
             }
-            Self::StartColourMultiplier(value) => {
+            Self::StartColorMultiplier(value) => {
                 79.write(output)?;
                 value.write(output)
             }
-            Self::EndColourMultiplier(value) => {
+            Self::EndColorMultiplier(value) => {
                 80.write(output)?;
                 value.write(output)
             }
@@ -1691,7 +1943,7 @@ impl Read for OldActionType {
     fn read(input: &mut impl std::io::Read) -> Result<Self, Error> {
         let value = i32::read(input)?;
 
-        Self::try_from(value).map_err(|()| Error::InvalidDynamicType(value))
+        Self::try_from(value).map_err(|()| Error::InvalidOldActionType(value))
     }
 }
 
@@ -1864,7 +2116,7 @@ pub enum ActionType {
     },
     SetColor {
         target_objects: NovaValue,
-        colour: NovaValue,
+        color: NovaValue,
         channel: NovaValue,
         duration: NovaValue,
         easing: NovaValue,
@@ -1878,7 +2130,7 @@ pub enum ActionType {
     },
     SetSecondaryColor {
         target_objects: NovaValue,
-        colour: NovaValue,
+        color: NovaValue,
         duration: NovaValue,
         easing: NovaValue,
     },
@@ -1890,7 +2142,7 @@ pub enum ActionType {
     },
     SetBorderColor {
         target_objects: NovaValue,
-        colour: NovaValue,
+        color: NovaValue,
         duration: NovaValue,
         easing: NovaValue,
     },
@@ -2002,13 +2254,13 @@ pub enum ActionType {
     },
     TransitionIn {
         type_: NovaValue,
-        colour: NovaValue,
+        color: NovaValue,
         duration: NovaValue,
         easing: NovaValue,
     },
     TransitionOut {
         type_: NovaValue,
-        colour: NovaValue,
+        color: NovaValue,
         duration: NovaValue,
         easing: NovaValue,
     },
@@ -2168,7 +2420,7 @@ impl ReadContext for ActionType {
             },
             12 => Self::SetColor {
                 target_objects: Read::read(input)?,
-                colour: Read::read(input)?,
+                color: Read::read(input)?,
                 channel: Read::read(input)?,
                 duration: Read::read(input)?,
                 easing: Read::read(input)?,
@@ -2182,7 +2434,7 @@ impl ReadContext for ActionType {
             },
             14 => Self::SetSecondaryColor {
                 target_objects: Read::read(input)?,
-                colour: Read::read(input)?,
+                color: Read::read(input)?,
                 duration: Read::read(input)?,
                 easing: Read::read(input)?,
             },
@@ -2194,7 +2446,7 @@ impl ReadContext for ActionType {
             },
             16 => Self::SetBorderColor {
                 target_objects: Read::read(input)?,
-                colour: Read::read(input)?,
+                color: Read::read(input)?,
                 duration: Read::read(input)?,
                 easing: Read::read(input)?,
             },
@@ -2306,13 +2558,13 @@ impl ReadContext for ActionType {
             },
             44 => Self::TransitionIn {
                 type_: Read::read(input)?,
-                colour: Read::read(input)?,
+                color: Read::read(input)?,
                 duration: Read::read(input)?,
                 easing: Read::read(input)?,
             },
             45 => Self::TransitionOut {
                 type_: Read::read(input)?,
-                colour: Read::read(input)?,
+                color: Read::read(input)?,
                 duration: Read::read(input)?,
                 easing: Read::read(input)?,
             },
@@ -2438,13 +2690,13 @@ impl Write for ActionType {
             | Self::Kill { target_objects } => target_objects.write(output),
             Self::SetColor {
                 target_objects,
-                colour,
+                color,
                 channel,
                 duration,
                 easing,
             } => {
                 target_objects.write(output)?;
-                colour.write(output)?;
+                color.write(output)?;
                 channel.write(output)?;
                 duration.write(output)?;
                 easing.write(output)
@@ -2464,12 +2716,12 @@ impl Write for ActionType {
             }
             Self::SetSecondaryColor {
                 target_objects,
-                colour,
+                color,
                 duration,
                 easing,
             } => {
                 target_objects.write(output)?;
-                colour.write(output)?;
+                color.write(output)?;
                 duration.write(output)?;
                 easing.write(output)
             }
@@ -2486,12 +2738,12 @@ impl Write for ActionType {
             }
             Self::SetBorderColor {
                 target_objects,
-                colour,
+                color,
                 duration,
                 easing,
             } => {
                 target_objects.write(output)?;
-                colour.write(output)?;
+                color.write(output)?;
                 duration.write(output)?;
                 easing.write(output)
             }
@@ -2641,23 +2893,23 @@ impl Write for ActionType {
             Self::StopScript { script } => script.write(output),
             Self::TransitionIn {
                 type_,
-                colour,
+                color,
                 duration,
                 easing,
             } => {
                 type_.write(output)?;
-                colour.write(output)?;
+                color.write(output)?;
                 duration.write(output)?;
                 easing.write(output)
             }
             Self::TransitionOut {
                 type_,
-                colour,
+                color,
                 duration,
                 easing,
             } => {
                 type_.write(output)?;
-                colour.write(output)?;
+                color.write(output)?;
                 duration.write(output)?;
                 easing.write(output)
             }
@@ -2721,7 +2973,7 @@ pub struct NovaValue {
     pub int_value: i32,
     pub float_value: f32,
     pub string_value: Option<String>,
-    pub color_value: Colour,
+    pub color_value: Color,
     pub vector_value: Vec2,
     pub int_list_value: Option<Vec<i32>>,
     pub sub_values: Option<Vec<NovaValue>>,
@@ -2978,10 +3230,10 @@ define_dynamic_type!(
     BoolPointerDown = 188,
     BoolPointerHeld = 189,
     BoolPointerReleased = 190,
-    FloatColourR = 191,
-    FloatColourG = 192,
-    FloatColourB = 193,
-    FloatColourA = 194,
+    FloatColorR = 191,
+    FloatColorG = 192,
+    FloatColorB = 193,
+    FloatColorA = 194,
     StringSubstring = 195,
     IntStringLength = 196
 );
@@ -3109,7 +3361,7 @@ define_static_type!(
     Int = 1,
     Float = 2,
     String = 3,
-    Colour = 4,
+    Color = 4,
     Vector = 5,
     Sound = 6,
     Music = 7,

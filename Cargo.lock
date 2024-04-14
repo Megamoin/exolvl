@@ -239,6 +239,7 @@ name = "exolvl"
 version = "0.6.0"
 dependencies = [
  "chrono",
+ "flate2",
  "image",
  "leb128",
  "serde",
