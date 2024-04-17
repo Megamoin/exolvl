@@ -31,10 +31,14 @@ impl_sealed!(
     super::Image,
     super::Layer,
     super::Vec2,
+    super::IntVec2,
     super::Color,
     super::AuthorReplay,
+    super::SimpleTile,
+    super::ObjectTile,
+    super::ObjectTileProperty,
     super::Object,
-    super::ObjectTileId,
+    super::ObjectId,
     super::ObjectProperty,
     super::Brush,
     super::BrushObject,
@@ -54,6 +58,7 @@ impl_sealed!(
     super::StaticType,
     super::Activator,
     super::Parameter,
+    super::Theme,
     Uuid,
 );
 

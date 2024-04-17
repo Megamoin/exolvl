@@ -18,6 +18,8 @@ leb128 = "0.2"
 serde = { version = "1.0", features = ["derive"], optional = true }
 uuid = { version = "1.8.0", features = ["v4", "fast-rng", "macro-diagnostics"]}
 flate2 = "1.0"
+strum = { version = "0.26", features = ["derive"] }
+titlecase = "3.0"
 
 [features]
 serde = ["dep:serde", "chrono/serde"]
