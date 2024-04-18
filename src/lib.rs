@@ -13,7 +13,7 @@ pub mod error;
 mod private;
 pub mod traits;
 
-use std::fs;
+use std::{fs::{File, remove_file}, time::Duration};
 
 use error::Error;
 #[cfg(feature = "image")]
@@ -21,6 +21,7 @@ use image::{DynamicImage, ImageFormat};
 use strum::EnumString;
 pub use traits::{Read, ReadContext, ReadVersioned, Write};
 use uuid::Uuid;
+use glam::{Vec2, IVec2};
 
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
@@ -364,18 +365,18 @@ impl Default for Exolvl {
 
 impl Exolvl {
     pub fn read_from_path(path: &str) -> Result<Self, Error>{
-        let file = fs::File::open(path)?;
+        let file = File::open(path)?;
         let mut file = flate2::read::GzDecoder::new(file);
         Exolvl::read(&mut file)
     }
 
     pub fn write_to_file(&mut self, path: &str) -> Result<(), Error>{
-        let file = match fs::File::open(path) {
+        let file = match File::open(path) {
             Ok( .. ) => {
-                fs::remove_file(path)?;
-                fs::File::create_new(path)?
+                remove_file(path)?;
+                File::create_new(path)?
             },
-            Err( .. ) => fs::File::create_new(path)?
+            Err( .. ) => File::create_new(path)?
         };
         // Weirdly enough, this isnt the same compression level as the .exolvl files normally are, but it still works.
         let mut gzfile = flate2::write::GzEncoder::new(file, flate2::Compression::best());
@@ -406,13 +407,13 @@ pub struct LocalLevel {
     /// When this level was last updated.
     pub update_date: chrono::DateTime<chrono::Utc>,
     /// The author medal time for this level in milliseconds.
-    pub author_time: i64,
+    pub author_time: Duration,
     /// The author medal lap times for this level in milliseconds.
-    pub author_lap_times: Vec<i64>,
+    pub author_lap_times: Vec<Duration>,
     /// The silver medal time for this level in milliseconds.
-    pub silver_medal_time: i64,
+    pub silver_medal_time: Duration,
     /// The gold medal time for this level in milliseconds.
-    pub gold_medal_time: i64,
+    pub gold_medal_time: Duration,
     /// The number of laps in this level.
     pub laps: i32,
     /// Whether this level is private or public.
@@ -523,13 +524,13 @@ pub struct LevelData {
     /// This is only present in levels with version 17 or higher.
     pub color_palette: Option<Vec<Color>>,
     /// The author medal time for this level in milliseconds.
-    pub author_time: i64,
+    pub author_time: Duration,
     /// The author medal lap times for this level in milliseconds.
-    pub author_lap_times: Vec<i64>,
+    pub author_lap_times: Vec<Duration>,
     /// The silver medal time for this level in milliseconds.
-    pub silver_medal_time: i64,
+    pub silver_medal_time: Duration,
     /// The gold medal time for this level in milliseconds.
-    pub gold_medal_time: i64,
+    pub gold_medal_time: Duration,
     /// The number of laps in this level.
     pub laps: i32,
     /// Whether the camera should be centered while playing this level.
@@ -854,22 +855,13 @@ impl Write for Layer {
     }
 }
 
-/// A 2D vector.
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[derive(Clone, Copy, Debug)]
-pub struct Vec2 {
-    /// The x-coordinate.
-    pub x: f32,
-    /// The y-coordinate.
-    pub y: f32,
-}
 
 impl Read for Vec2 {
     fn read(input: &mut impl std::io::Read) -> Result<Self, Error> {
-        Ok(Self {
-            x: Read::read(input)?,
-            y: Read::read(input)?,
-        })
+        Ok(Vec2::new(
+            Read::read(input)?, 
+            Read::read(input)?
+        ))
     }
 }
 
@@ -880,59 +872,19 @@ impl Write for Vec2 {
     }
 }
 
-impl Default for Vec2 {
-    fn default() -> Self {
-        Self {
-            x: 0.0,
-            y: 0.0,
-        }
-    }
-}
-
-impl Vec2 {
-    pub fn new(x: f32, y: f32) -> Self {
-        Self { x, y }
-    }
-}
-
-/// A 2D vector with integers as its x and y fields.
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[derive(Clone, Copy, Debug)]
-pub struct IntVec2 {
-    /// The x-coordinate.
-    pub x: i32,
-    /// The y-coordinate.
-    pub y: i32,
-}
-
-impl Read for IntVec2 {
+impl Read for IVec2 {
     fn read(input: &mut impl std::io::Read) -> Result<Self, Error> {
-        Ok(Self {
-            x: Read::read(input)?,
-            y: Read::read(input)?,
-        })
+        Ok(IVec2::new(
+            Read::read(input)?, 
+            Read::read(input)?
+        ))
     }
 }
 
-impl Write for IntVec2 {
+impl Write for IVec2 {
     fn write(&self, output: &mut impl std::io::Write) -> Result<(), Error> {
         self.x.write(output)?;
         self.y.write(output)
-    }
-}
-
-impl Default for IntVec2 {
-    fn default() -> Self {
-        Self {
-            x: 0,
-            y: 0,
-        }
-    }
-}
-
-impl IntVec2 {
-    pub fn new(x: i32, y: i32) -> Self {
-        Self { x, y }
     }
 }
 
@@ -1026,7 +978,7 @@ impl Write for AuthorReplay {
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Clone, Debug)]
 pub struct SimpleTile {
-    pub position: IntVec2,
+    pub position: IVec2,
     pub tile_id: String,
 }
 
@@ -1051,7 +1003,7 @@ impl Write for SimpleTile {
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Clone, Debug)]
 pub struct ObjectTile {
-    pub position: IntVec2,
+    pub position: IVec2,
     pub tile_id: String,
     pub entity_id: i32,
     pub offset: Vec2,
@@ -3891,5 +3843,18 @@ impl Read for Theme {
 impl Write for Theme {
     fn write(&self, output: &mut impl std::io::Write) -> Result<(), Error> {
         self.to_string().write(output)
+    }
+}
+
+impl Read for Duration {
+    fn read(input: &mut impl std::io::Read) -> Result<Self, Error>
+        where
+            Self: Sized {
+        Ok(Duration::from_millis(i64::read(input)? as u64))
+    }
+}
+impl Write for Duration {
+    fn write(&self, output: &mut impl std::io::Write) -> Result<(), Error> {
+        (self.as_millis() as i64).write(output)
     }
 }

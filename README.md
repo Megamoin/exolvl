@@ -9,11 +9,11 @@ A library for reading and writing Exoracer level files.
 -   [ ] More documentation (see <https://github.com/skycloudd/exolvl/issues/1>)
 -   [x] Implement the `Default` trait for `Exolvl` (?)
 -   [x] Use the `image` crate for images
--   [ ] Use the `glam` crate for `Vec2`
--   [ ] Use a `Duration` type for things like medal times
+-   [x] Use the `glam` crate for `Vec2`
+-   [x] Use a `Duration` type for things like medal times
 -   [x] Use `Uuid` for UUIDs instead of `String`
 -   [ ] Newtype pattern for ids
--   [ ] Make `theme` an enum, not a `String`
+-   [x] Make `theme` an enum, not a `String`
 
 ## Usage
 

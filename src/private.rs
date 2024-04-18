@@ -31,7 +31,7 @@ impl_sealed!(
     super::Image,
     super::Layer,
     super::Vec2,
-    super::IntVec2,
+    super::IVec2,
     super::Color,
     super::AuthorReplay,
     super::SimpleTile,
@@ -60,6 +60,7 @@ impl_sealed!(
     super::Parameter,
     super::Theme,
     Uuid,
+    std::time::Duration,
 );
 
 #[cfg(feature = "image")]
