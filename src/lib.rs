@@ -9,12 +9,15 @@
 #![cfg_attr(target_os = "windows", doc=include_str!("..\\README.md"))]
 #![cfg_attr(not(target_os = "windows"), doc=include_str!("../README.md"))]
 
+#[cfg(feature="serde")]
+#[macro_use]
+extern crate serde;
+
 pub mod error;
 mod private;
 pub mod traits;
 
 use std::{fs::{File, remove_file}, time::Duration};
-
 use error::Error;
 #[cfg(feature = "image")]
 use image::{DynamicImage, ImageFormat};
@@ -383,6 +386,11 @@ impl Exolvl {
         self.write(&mut gzfile)?;
         Ok(())
     }
+
+    #[cfg(feature = "serde")]
+    pub fn get_json_file(&self) -> Result<String, serde_json::Error> {
+        serde_json::to_string(self)
+    }
 }
 /// The local level data for this level.
 ///
@@ -708,6 +716,43 @@ impl Write for LevelData {
         self.disable_revive_pads.write(output)?;
         self.disable_start_animation.write(output)?;
         self.gravity.write(output)
+    }
+}
+
+impl LevelData {
+    /// adds an Object to the level data of a new level, and adds it to the Layer with the given layer id
+    /// the object's entity id will be changed to 1 plus the highest current entity id in the objects set
+    pub fn add_object(&mut self, mut obj: Object, layer_id: i32) -> (){
+        if !self.nova_level {
+            panic!("Tried to add an object when the levelData belongs to a legacy level")
+        }
+        
+        // set the entityId of the object to one that is unique
+        let largest_entity_id = match self.objects.iter().map(|x| x.entity_id).min() {
+            Some(id) => id,
+            None => 1
+        };
+        obj.entity_id = largest_entity_id;
+
+        match self.layers.iter_mut().find(|x| x.layer_id == layer_id) {
+            None => self.layers.get_mut(0).unwrap().children.push(obj.entity_id),
+            Some( ly ) => ly.children.push(obj.entity_id),
+        };
+
+        self.objects.push(obj);
+    }
+
+    /// returns the amount of objects in a new level or the amount of tiles in a legacy level
+    pub fn get_object_count(&self) -> usize{
+        if !self.nova_level {
+            return self.object_tiles.len() +
+                self.terrain_tiles.len() +
+                self.floating_zone_tiles.len() +
+                self.under_decoration_tiles.len() +
+                self.background_decoration_tiles.len() +
+                self.foreground_decoration_tiles.len()
+        }
+        self.objects.len()
     }
 }
 
@@ -3822,6 +3867,7 @@ impl Write for Uuid {
     }
 }
 
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(strum::Display, Clone, Copy, Debug, EnumString)]
 #[strum(serialize_all = "lowercase")]
 pub enum Theme {
@@ -3836,7 +3882,6 @@ impl Read for Theme {
     Self: Sized {
         let string = String::read(input)?;
         println!("{}",string);
-        //let string = titlecase::titlecase(&String::read(input)?);
         Ok(std::str::FromStr::from_str(&string).unwrap())
     }
 }
