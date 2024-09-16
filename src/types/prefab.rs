@@ -1,8 +1,8 @@
-use crate::{Read, Write, Error, Image};
-use crate::types::object::Object;
+use crate::{Read, Write, Error};
+use crate::types::{image::Image, object::Object};
 
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Hash, PartialEq, Eq)]
 pub struct Prefab {
     pub prefab_id: i32,
     pub prefab_image_data: Image,

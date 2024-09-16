@@ -1,8 +1,8 @@
 use crate::{Read, Write, Error};
-use crate::types::{old_actiontype::OldActionType, old_action_property::OldActionProperty};
+use super::{old_action_type::OldActionType, old_action_property::OldActionProperty};
 
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub struct OldAction {
     pub action_type: OldActionType,
     pub wait: bool,

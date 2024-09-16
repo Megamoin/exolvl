@@ -1,1 +1,5 @@
 /target
+.DS_Store
+src/main.rs
+.vscode/settings.json
+src/encrypt.rs

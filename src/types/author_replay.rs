@@ -1,7 +1,7 @@
 use crate::{Read, Write, Error};
 
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[derive(Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Default)]
 pub struct AuthorReplay(pub Vec<u8>);
 
 impl Read for AuthorReplay {

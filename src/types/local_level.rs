@@ -1,10 +1,10 @@
-use crate::{Read, Write, Error, Uuid, Duration};
+use crate::{Read, Write, Error, Uuid};
 
 /// The local level data for this level.
 ///
 /// This data is only ever used in the level editor and is not uploaded to the server.
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[derive(Clone, Debug, Hash)]
+#[derive(Clone, Debug, Default, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub struct LocalLevel {
     /// The version of the exolvl format that this level uses.
     /// 
@@ -23,13 +23,13 @@ pub struct LocalLevel {
     /// When this level was last updated.
     pub update_date: chrono::DateTime<chrono::Utc>,
     /// The author medal time for this level in milliseconds.
-    pub author_time: Duration,
+    pub author_time: i64,
     /// The author medal lap times for this level in milliseconds.
-    pub author_lap_times: Vec<Duration>,
+    pub author_lap_times: Vec<i64>,
     /// The silver medal time for this level in milliseconds.
-    pub silver_medal_time: Duration,
+    pub silver_medal_time: i64,
     /// The gold medal time for this level in milliseconds.
-    pub gold_medal_time: Duration,
+    pub gold_medal_time: i64,
     /// The number of laps in this level.
     pub laps: i32,
     /// Whether this level is private or public.

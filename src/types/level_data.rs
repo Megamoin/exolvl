@@ -1,13 +1,14 @@
-use crate::{Read, Write, Error, Vec2, Uuid, Duration, ReadVersioned};
+use crate::{Read, Write, Error, Uuid, ReadVersioned};
 use crate::types::pattern::Pattern;
 use crate::types::prefab::Prefab;
 use crate::types::layer::Layer;
-use crate::types::{object::Object, brush::Brush, color::Color, nova_script::NovaScript, variable::Variable, theme::Theme, simple_tile::SimpleTile, object_tile::ObjectTile};
-
+use crate::types::{object::Object, brush::Brush, color::Color, nova_script::NovaScript, nova_script::variable::Variable, theme::Theme, old_editor_types::simple_tile::SimpleTile, old_editor_types::object_tile::ObjectTile};
+use crate::types::vec2::Vec2;
+use ordered_float::OrderedFloat;
 
 /// The level data for an Exoracer level.
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, Hash)]
 pub struct LevelData {
     /// The UUID of the level.
     pub level_id: Uuid,
@@ -45,13 +46,13 @@ pub struct LevelData {
     /// This is only present in levels with version 17 or higher.
     pub color_palette: Option<Vec<Color>>,
     /// The author medal time for this level in milliseconds.
-    pub author_time: Duration,
+    pub author_time: i64,
     /// The author medal lap times for this level in milliseconds.
-    pub author_lap_times: Vec<Duration>,
+    pub author_lap_times: Vec<i64>,
     /// The silver medal time for this level in milliseconds.
-    pub silver_medal_time: Duration,
+    pub silver_medal_time: i64,
     /// The gold medal time for this level in milliseconds.
-    pub gold_medal_time: Duration,
+    pub gold_medal_time: i64,
     /// The number of laps in this level.
     pub laps: i32,
     /// Whether the camera should be centered while playing this level.
@@ -94,15 +95,15 @@ pub struct LevelData {
     /// The custom terrain border color of the level.
     pub custom_terrain_border_color: Color,
     /// The thickness of the terrain border.
-    pub custom_terrain_border_thickness: f32,
+    pub custom_terrain_border_thickness: OrderedFloat<f32>,
     /// The corner radius of the terrain border.
-    pub custom_terrain_border_corner_radius: f32,
+    pub custom_terrain_border_corner_radius: OrderedFloat<f32>,
     /// Wether the copied terrain has round reflex angles or not (only visual).
     pub custom_terrain_round_reflex_angles: bool,
     /// Wether the copied terrain has a round collider or not (not visual).
     pub custom_terrain_round_collider: bool,
     /// The friction of the copied terrain.
-    pub custom_terrain_friction: f32,
+    pub custom_terrain_friction: OrderedFloat<f32>,
     /// Whether the default music should be played or not.
     pub default_music: bool,
     /// The music ids for the level. The game randomly picks one of these to play each time.

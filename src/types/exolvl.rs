@@ -1,10 +1,12 @@
 use std::fs::File;
-use crate::{Read, Write, Error, ReadVersioned, Vec2, Image};
-use crate::types::{local_level::LocalLevel, level_data::LevelData, author_replay::AuthorReplay, theme::Theme};
+use crate::{Read, Write, Error, ReadVersioned};
+use super::image::Image;
+use crate::types::{local_level::LocalLevel, level_data::LevelData, author_replay::AuthorReplay, theme::Theme, vec2::Vec2};
+use std::path::Path;
 
 /// A full Exoracer level.
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Hash, PartialEq, Eq)]
 pub struct Exolvl {
     /// The local level data for this level.
     pub local_level: LocalLevel,
@@ -111,7 +113,7 @@ impl Default for Exolvl {
                 disable_replays: Default::default(),
                 disable_revive_pads: Default::default(),
                 disable_start_animation: Default::default(),
-                gravity: Vec2 { x: 0.0, y: -75.0 } 
+                gravity: Vec2 { x: 0.0.into(), y: (-75.0).into() } 
             },
             author_replay: AuthorReplay(Default::default()),
         }
@@ -119,23 +121,24 @@ impl Default for Exolvl {
 }
 
 impl Exolvl {
-    pub fn read_from_path(path: &str) -> Result<Self, Error>{
+    pub fn read_from_path(path: &Path) -> Result<Self, Error>{
         let file = File::open(path)?;
         let mut file = flate2::read::GzDecoder::new(file);
         Exolvl::read(&mut file)
     }
 
-    pub fn write_to_file(&mut self, path: &str) -> Result<(), Error>{
+    pub fn write_to_file(&mut self, path: &Path) -> Result<(), Error>{
         let file = File::create(path)?;
         // Weirdly enough, this isnt the same compression level as the .exolvl files normally are, but it still works.
         let mut gzfile = flate2::write::GzEncoder::new(file, flate2::Compression::best());
         self.write(&mut gzfile)?;
+        gzfile.finish()?;
         Ok(())
     }
 
     #[cfg(feature = "serde")]
-    pub fn save_as_json_to_file(&self, dir: &str) -> Result<File, serde_json::Error> {
-        let mut new_file = File::create(format!("{}/new_{}.json", dir, self.local_level.level_name.clone())).unwrap();
+    pub fn save_as_json_to_file(&self, dir: &Path) -> Result<File, serde_json::Error> {
+        let mut new_file = File::create(dir.join(format!("new_{}.exolvl", self.local_level.level_name.clone()))).unwrap();
         std::io::Write::write_all(
             &mut new_file, 
             serde_json::to_string(self).unwrap().as_bytes()
@@ -143,7 +146,7 @@ impl Exolvl {
         Ok(new_file)
     }
     #[cfg(feature = "image")]
-    pub fn add_image_pattern(&mut self, path_to_image: &str) -> Result<(), image::ImageError> {
+    pub fn add_image_pattern(&mut self, path_to_image: &Path) -> Result<(), image::ImageError> {
         let img: Image = image::open(path_to_image)?.into();
         self.level_data.patterns.push(vec![img].into());
         Ok(())

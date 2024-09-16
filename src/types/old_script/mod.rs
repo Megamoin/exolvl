@@ -1,5 +1,9 @@
+pub mod old_action;
+pub mod old_action_property;
+pub mod old_action_type;
+
 use crate::{Read, Write, Error};
-use crate::types::old_action::OldAction;
+use old_action::OldAction;
 
 
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]

@@ -3,7 +3,7 @@ use crate::{Read, Write, Error};
 macro_rules! define_dynamic_type {
     ($($name:ident = $number:expr),*) => {
         #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-        #[derive(Clone, Copy, Debug,   Hash, PartialEq, Eq, PartialOrd, Ord)]
+        #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
         pub enum DynamicType {
             $($name = $number),*
         }

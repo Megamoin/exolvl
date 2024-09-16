@@ -222,3 +222,9 @@ impl Write for ObjectId {
         i32::from(self).write(output)
     }
 }
+
+impl Default for ObjectId {
+    fn default() -> Self {
+        Self::SpriteSquare
+    }
+}

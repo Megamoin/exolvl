@@ -1,8 +1,8 @@
 use crate::{Read, Write, Error};
-use crate::types::nova_value::NovaValue;
+use super::nova_value::NovaValue;
 
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Activator {
     pub activator_type: i32,
     pub parameters: Vec<NovaValue>,

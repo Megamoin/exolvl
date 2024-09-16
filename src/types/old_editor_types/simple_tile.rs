@@ -1,7 +1,7 @@
 use crate::{Read, Write, Error, IVec2};
 
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Hash, PartialEq, Eq)]
 pub struct SimpleTile {
     pub position: IVec2,
     pub tile_id: String,

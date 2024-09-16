@@ -1,8 +1,9 @@
-use crate::{Read, Write, Error, Vec2, IVec2};
-use crate::types::object_tile_property::ObjectTileProperty;
+use crate::{Read, Write, Error, IVec2};
+use crate::types::vec2::Vec2;
+use super::object_tile_property::ObjectTileProperty;
 
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Hash, PartialEq, Eq)]
 pub struct ObjectTile {
     pub position: IVec2,
     pub tile_id: String,

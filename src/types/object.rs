@@ -1,8 +1,10 @@
-use crate::{Read, Write, Error, Vec2};
-use crate::types::{object_id::ObjectId, object_property::ObjectProperty};
+use ordered_float::OrderedFloat;
+
+use crate::{Read, Write, Error};
+use crate::types::{object_id::ObjectId, object_property::ObjectProperty, vec2::Vec2};
 
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Hash, PartialEq, Eq, Default)]
 pub struct Object {
     pub entity_id: i32,
     pub object_id: ObjectId,
@@ -10,7 +12,7 @@ pub struct Object {
     pub prefab_id: i32,
     pub position: Vec2,
     pub scale: Vec2,
-    pub rotation: f32,
+    pub rotation: OrderedFloat<f32>,
     pub tag: String,
     pub properties: Vec<ObjectProperty>,
     pub in_layer: i32,

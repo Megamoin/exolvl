@@ -1,12 +1,13 @@
 use crate::{Read, Write, Error};
+use ordered_float::OrderedFloat;
 
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Color {
-    pub r: f32,
-    pub g: f32,
-    pub b: f32,
-    pub a: f32,
+    pub r: OrderedFloat<f32>,
+    pub g: OrderedFloat<f32>,
+    pub b: OrderedFloat<f32>,
+    pub a: OrderedFloat<f32>,
 }
 
 impl Read for Color {
@@ -32,10 +33,10 @@ impl Write for Color {
 impl Default for Color {
     fn default() -> Self {
         Self {
-            r: 0.0,
-            g: 0.0,
-            b: 0.0,
-            a: 1.0,
+            r: 0.0.into(),
+            g: 0.0.into(),
+            b: 0.0.into(),
+            a: 1.0.into(),
         }
     }
 }
@@ -53,10 +54,10 @@ impl std::str::FromStr for Color {
         let a = i32::from_str_radix(&s[7..9].concat(), 16)?;
 
         Ok(Self {
-            r: (r as f32 / 255.0),
-            g: (g as f32 / 255.0),
-            b: (b as f32 / 255.0),
-            a: (a as f32 / 255.0),
+            r: (r as f32 / 255.0).into(),
+            g: (g as f32 / 255.0).into(),
+            b: (b as f32 / 255.0).into(),
+            a: (a as f32 / 255.0).into(),
         })
     }
 }
@@ -64,10 +65,10 @@ impl std::str::FromStr for Color {
 impl ToString for Color {
     fn to_string(&self) -> String {
         format!("#{:02X}{:02X}{:02X}{:02X}", 
-        (self.r * 255.0) as i32, 
-        (self.g * 255.0) as i32, 
-        (self.b * 255.0) as i32, 
-        (self.a * 255.0) as i32
+        (self.r.0 * 255.0) as i32, 
+        (self.g.0 * 255.0) as i32, 
+        (self.b.0 * 255.0) as i32, 
+        (self.a.0 * 255.0) as i32
     )}
 }
 
@@ -76,10 +77,10 @@ impl From<&str> for Color {
         let value = value.trim_start_matches("#");
         let u32_value = u32::from_str_radix(value, 16).unwrap();
         Color { 
-            r: (u32_value >> 24 & 0xFF) as f32 / 0xFF as f32,
-            g: (u32_value >> 16 & 0xFF) as f32 / 0xFF as f32,
-            b: (u32_value >> 8 & 0xFF) as f32 / 0xFF as f32,
-            a: (u32_value & 0xFF) as f32 / 0xFF as f32
+            r: ((u32_value >> 24 & 0xFF) as f32 / 0xFF as f32).into(),
+            g: ((u32_value >> 16 & 0xFF) as f32 / 0xFF as f32).into(),
+            b: ((u32_value >> 8 & 0xFF) as f32 / 0xFF as f32).into(),
+            a: ((u32_value & 0xFF) as f32 / 0xFF as f32).into()
         }
     }
 }

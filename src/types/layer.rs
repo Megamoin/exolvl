@@ -1,7 +1,8 @@
-use crate::{Read, Write, Error, Vec2};
+use crate::{Read, Write, Error};
+use crate::types::vec2::Vec2;
 
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Layer {
     pub layer_id: i32,
     pub layer_name: String,
@@ -41,5 +42,21 @@ impl Write for Layer {
         self.parallax.write(output)?;
         self.fixed_size.write(output)?;
         self.children.write(output)
+    }
+}
+
+impl Default for Layer {
+    fn default() -> Self {
+        Self { 
+            layer_id: 1,
+            layer_name: "".to_string(),
+            selected: true,
+            invisible: false, 
+            locked: false,
+            foreground_type: 0,
+            parallax: Vec2 { x: 0.0.into(), y: 0.0.into() },
+            fixed_size: false,
+            children: vec![]
+        }
     }
 }

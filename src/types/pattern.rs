@@ -1,10 +1,11 @@
-use crate::{Read, Write, Error, Image};
+use crate::{Read, Write, Error};
+use super::image::Image;
 
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(feature = "image", derive(Clone, Debug, PartialEq))]
+#[cfg_attr(feature = "image", derive(Clone, Debug, Hash, PartialEq, Eq))]
 #[cfg_attr(
     not(feature = "image"),
-    derive(Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)
+    derive(Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Default)
 )]
 pub struct Pattern {
     pub pattern_id: i32,

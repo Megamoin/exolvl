@@ -1,9 +1,9 @@
 use crate::{Read, Write, Error, ReadContext};
-use crate::types::{action::Action, nova_value::NovaValue, function_call::FunctionCall};
+use super::{action::Action, nova_value::NovaValue, function_call::FunctionCall};
 
 
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub enum ActionType {
     Repeat {
         actions: Vec<Action>,

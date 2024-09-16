@@ -1,7 +1,8 @@
-use crate::{Read, Write, Error, EnumString};
+use crate::{Read, Write, Error};
+use strum::{Display, EnumString};
 
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[derive(strum::Display, Clone, Copy, Debug, EnumString)]
+#[derive(Display, EnumString, Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
 #[strum(serialize_all = "lowercase")]
 pub enum Theme {
     Mountains,
@@ -14,12 +15,16 @@ impl Read for Theme {
     where
     Self: Sized {
         let string = String::read(input)?;
-        println!("{}",string);
-        Ok(std::str::FromStr::from_str(&string).unwrap())
+        string.parse::<Theme>().map_err( |e| Error::StrumParse(e))
     }
 }
 impl Write for Theme {
     fn write(&self, output: &mut impl std::io::Write) -> Result<(), Error> {
         self.to_string().write(output)
+    }
+}
+impl Default for Theme {
+    fn default() -> Self {
+        Self::Mountains
     }
 }

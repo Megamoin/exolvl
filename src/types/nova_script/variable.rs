@@ -1,8 +1,8 @@
 use crate::{Read, Write, Error};
-use crate::types::{static_type::StaticType, nova_value::NovaValue};
+use super::{static_type::StaticType, nova_value::NovaValue};
 
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Variable {
     pub variable_id: i32,
     pub name: String,

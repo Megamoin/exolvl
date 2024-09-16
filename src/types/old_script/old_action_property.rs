@@ -1,7 +1,7 @@
 use crate::{Read, Write, Error};
 
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub struct OldActionProperty {
     pub name: String,
     pub value: String,

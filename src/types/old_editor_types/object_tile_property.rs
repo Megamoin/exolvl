@@ -1,14 +1,15 @@
 use crate::{Read, Write, Error, Uuid};
 use crate::types::color::Color;
+use ordered_float::OrderedFloat;
 
 // todo: implement an enum that holds all possible names for the Properties (and maybe the type of the value as well)
 // the value is stored as a string and would need to be parsed into that defined type then. Ill do it later :kappa:
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub enum ObjectTileProperty {
-    Impulse(f32),
-    Rotation(f32),
-    Size(f32),
+    Impulse(OrderedFloat<f32>),
+    Rotation(OrderedFloat<f32>),
+    Size(OrderedFloat<f32>),
     Direction(i32),
     Bounce(bool),
     ActivationCount(i32),
@@ -24,28 +25,28 @@ pub enum ObjectTileProperty {
     Sprite(String),
     Color(Color),
     BlendMode(String),
-    ScaleX(f32),
-    ScaleY(f32),
+    ScaleX(OrderedFloat<f32>),
+    ScaleY(OrderedFloat<f32>),
     FlipX(bool),
     FlipY(bool),
     Layer(String),
     OrderInLayer(i32),
     Text(String),
-    Width(f32),
-    Height(f32),
-    FontSize(f32),
+    Width(OrderedFloat<f32>),
+    Height(OrderedFloat<f32>),
+    FontSize(OrderedFloat<f32>),
     PhysicsType(String),
-    Health(f32),
+    Health(OrderedFloat<f32>),
     Killer(bool),
     DamageFromJump(bool),
     DamageFromDash(bool),
     ReverseDirOnDmg(bool),
     Floating(bool),
-    FeetOffset(f32),
+    FeetOffset(OrderedFloat<f32>),
     DeathScript(Uuid),
     Tag(String),
     AllPlayers(bool),
-    Radius(f32),
+    Radius(OrderedFloat<f32>),
 }
 
 fn vec_i32_from_str(s: &str) -> Vec<i32> {
