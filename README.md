@@ -13,7 +13,12 @@ A library for reading and writing Exoracer level files.
 -   [x] Use a `Duration` type for things like medal times
 -   [x] Use `Uuid` for UUIDs instead of `String`
 -   [ ] Newtype pattern for ids
+<<<<<<< HEAD
 -   [x] Make `theme` an enum, not a `String`
+=======
+-   [ ] Make `theme` an enum, not a `String`
+-   [ ] Add `#[deprecated]` on deprecated things, pointing to the new thing
+>>>>>>> 08509f01cd333b02b98c93b1506c47ecdfccc16a
 
 ## Usage
 
