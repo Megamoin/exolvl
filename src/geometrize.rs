@@ -427,26 +427,11 @@ fn get_object(entity_id: i32, object_id: ObjectId, position: Vec2, rotation: f32
 fn set_theme(level: &mut Exolvl) {
     level.level_data.theme = Theme::Custom;
 
-    level.level_data.custom_terrain_color = Color {
-        r: 1.0.into(),
-        g: 1.0.into(),
-        b: 1.0.into(),
-        a: 1.0.into(),
-    };
+    level.level_data.custom_terrain_color = Color::new(1.0, 1.0, 1.0, 1.0);
 
-    level.level_data.custom_terrain_border_color = Color {
-        r: 1.0.into(),
-        g: 1.0.into(),
-        b: 1.0.into(),
-        a: 1.0.into(),
-    };
+    level.level_data.custom_terrain_border_color = Color::new(1.0, 1.0, 1.0, 1.0);
 
-    level.level_data.custom_background_color = Color {
-        r: 0.0.into(),
-        g: 0.0.into(),
-        b: 0.0.into(),
-        a: 1.0.into(),
-    };
+    level.level_data.custom_background_color = Color::default();
 }
 
 fn update_level_properties(level: &mut Exolvl, level_name: &str) {

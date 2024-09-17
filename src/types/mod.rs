@@ -17,3 +17,4 @@ pub mod vec2;
 pub mod image;
 pub mod old_script;
 pub mod old_editor_types;
+pub mod level;

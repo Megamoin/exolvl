@@ -49,6 +49,7 @@ pub enum ActionType {
         target_objects: NovaValue,
         pivot: NovaValue,
         rotation: NovaValue,
+        is_global: NovaValue,
         rotate_target: NovaValue,
         duration: NovaValue,
         easing: NovaValue,
@@ -162,6 +163,8 @@ pub enum ActionType {
         sound: NovaValue,
         volume: NovaValue,
         pitch: NovaValue,
+        do_loop: NovaValue,
+        fade_in: NovaValue,
     },
     PlayMusic {
         music: NovaValue,
@@ -353,6 +356,7 @@ impl ReadContext for ActionType {
                 target_objects: Read::read(input)?,
                 pivot: Read::read(input)?,
                 rotation: Read::read(input)?,
+                is_global: Read::read(input)?,
                 rotate_target: Read::read(input)?,
                 duration: Read::read(input)?,
                 easing: Read::read(input)?,
@@ -466,6 +470,8 @@ impl ReadContext for ActionType {
                 sound: Read::read(input)?,
                 volume: Read::read(input)?,
                 pitch: Read::read(input)?,
+                do_loop: Read::read(input)?,
+                fade_in: Read::read(input)?,
             },
             34 => Self::PlayMusic {
                 music: Read::read(input)?,
@@ -617,6 +623,7 @@ impl Write for ActionType {
                 target_objects,
                 pivot,
                 rotation,
+                is_global,
                 rotate_target,
                 duration,
                 easing,
@@ -624,6 +631,7 @@ impl Write for ActionType {
                 target_objects.write(output)?;
                 pivot.write(output)?;
                 rotation.write(output)?;
+                is_global.write(output)?;
                 rotate_target.write(output)?;
                 duration.write(output)?;
                 easing.write(output)
@@ -788,10 +796,14 @@ impl Write for ActionType {
                 sound,
                 volume,
                 pitch,
+                do_loop,
+                fade_in,
             } => {
                 sound.write(output)?;
                 volume.write(output)?;
-                pitch.write(output)
+                pitch.write(output)?;
+                do_loop.write(output)?;
+                fade_in.write(output)
             }
             Self::PlayMusic {
                 music,

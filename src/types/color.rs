@@ -84,3 +84,14 @@ impl From<&str> for Color {
         }
     }
 }
+
+impl Color {
+    pub fn new(r: f32, g: f32, b: f32, a: f32) -> Self {
+        Self { 
+            r: OrderedFloat(r), 
+            g: OrderedFloat(g), 
+            b: OrderedFloat(b), 
+            a: OrderedFloat(a), 
+        }
+    }
+}

@@ -1,7 +1,5 @@
 //! Errors that the library can return.
 
-use std::fmt::write;
-
 /// Errors that the library can return while reading/writing the binary format.
 #[derive(Debug)]
 pub enum Error {
@@ -26,6 +24,10 @@ pub enum Error {
     Image(image::ImageError),
     /// An error occurred while parsing a String into an enum value.
     StrumParse(strum::ParseError),
+    /// An error occurred while reading a file.
+    FileRead(std::io::Error),
+    /// An error occurred while serializing with serde.
+    SerdeParse(serde_json::Error),
 }
 
 impl std::fmt::Display for Error {
@@ -43,7 +45,9 @@ impl std::fmt::Display for Error {
             Self::Io(err) => write!(f, "{err}"),
             #[cfg(feature = "image")]
             Self::Image(err) => write!(f, "{err}"),
-            Self::StrumParse(err) => write!(f, "{err}")
+            Self::StrumParse(err) => write!(f, "{err}"),
+            Self::FileRead(err) => write!(f, "{err}"),
+            Self::SerdeParse(err) => write!(f, "{err}"),
         }
     }
 }

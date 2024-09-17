@@ -19,10 +19,9 @@ pub mod primitive_impls;
 
 use error::Error;
 #[cfg(feature = "image")]
-use strum::EnumString;
 pub use traits::{Read, ReadContext, ReadVersioned, Write};
 use uuid::Uuid;
-use glam::{Vec2, IVec2};
+use glam::IVec2;
 
 
 impl Read for IVec2 {
