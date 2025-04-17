@@ -1,3 +1,5 @@
+#![cfg(feature = "image")]
+
 use crate::types::object_id::ObjectId;
 use crate::types::theme::Theme;
 use crate::types::vec2::Vec2;
@@ -10,23 +12,25 @@ use std::{
     error::Error,
     io::BufReader
 };
-use image::Rgba;
 use std::fs::File;
 use std::io::Result as IoResult;
 // use serde_json::Value;
 use std::path::Path;
 use uuid::Uuid;
+#[cfg(feature = "serde")]
 use serde::Deserialize;
-
-#[derive(Debug, Deserialize)]
+use image::Rgba;
+#[cfg_attr(feature = "serde", derive(Deserialize))]
+#[derive(Debug)]
 struct Shape {
-    #[serde(rename = "type")]
+    #[cfg_attr(feature = "serde", serde(rename = "type"))]
     shape_type: u8,
     data: Vec<i32>,
     color: Vec<u8>,
 }
 
-#[derive(Debug, Deserialize)]
+#[cfg_attr(feature = "serde", derive(Deserialize))]
+#[derive(Debug)]
 struct Shapes {
     shapes: Vec<Shape>,
 }

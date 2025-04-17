@@ -1,10 +1,12 @@
+#[cfg(feature = "image")]
 use std::{io::Write as _, path::Path};
 
 use crate::{error::Error, Read, Write};
-use image::ImageReader;
 #[cfg(feature = "image")]
-use image::{DynamicImage, RgbaImage};
+use image::{ImageReader, DynamicImage, RgbaImage};
+#[cfg(feature = "image")]
 use base64::{prelude::BASE64_STANDARD, Engine};
+#[cfg(feature = "serde")]
 use serde::{de::Visitor, Serialize};
 
 #[cfg(feature = "image")]
@@ -43,6 +45,7 @@ impl serde::Serialize for Image {
 }
 */
 
+#[cfg(all(feature = "image", feature = "serde"))]
 impl<'de> serde::Deserialize<'de> for Image {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where

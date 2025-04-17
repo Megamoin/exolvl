@@ -1,4 +1,5 @@
-use crate::{Read, Write, Error};
+use crate::traits::{Read, Write};
+use crate::error::Error;
 use strum_macros::EnumIter;
 use strum::EnumString;
 

@@ -2,7 +2,9 @@ use std::{fs::File, io::{BufWriter, Write as _}};
 use flate2::{write::GzEncoder, Compression};
 
 use crate::{Read, Write, Error, ReadVersioned};
-use super::{image::Image, layer::Layer, level::Level};
+#[cfg(feature = "image")]
+use super::image::Image;
+use super::{layer::Layer, level::Level};
 use crate::types::{local_level::LocalLevel, level_data::LevelData, author_replay::AuthorReplay, theme::Theme, vec2::Vec2};
 use std::path::Path;
 

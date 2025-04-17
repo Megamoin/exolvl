@@ -51,6 +51,7 @@ impl std::fmt::Display for Error {
             Self::Image(err) => write!(f, "{err}"),
             Self::StrumParse(err) => write!(f, "{err}"),
             Self::FileRead(err) => write!(f, "{err}"),
+            #[cfg(feature = "serde")]
             Self::SerdeParse(err) => write!(f, "{err}"),
             #[cfg(feature = "request")]
             Self::InvalidRequest(err) => write!(f, "{err}"),

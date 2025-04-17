@@ -1,6 +1,7 @@
 use ordered_float::OrderedFloat;
 
-use crate::{Read, Write, Error};
+use crate::traits::{Read, Write};
+use crate::error::Error;
 use crate::types::{object_id::ObjectId, object_property::ObjectProperty, vec2::Vec2};
 
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]

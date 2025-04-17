@@ -13,6 +13,7 @@ pub mod error;
 mod private;
 pub mod traits;
 pub mod types;
+#[cfg(feature = "image")]
 pub mod geometrize;
 pub mod primitive_impls;
 
@@ -24,8 +25,8 @@ pub mod request;
 #[cfg(feature = "private-modules")]
 pub mod gui;
 
+
 use error::Error;
-#[cfg(feature = "image")]
 pub use traits::{Read, ReadContext, ReadVersioned, Write};
 use uuid::Uuid;
 use glam::IVec2;

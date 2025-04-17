@@ -1,6 +1,7 @@
 use strum::{Display as StrumDisplay, EnumIter, ParseError};
 use strum_macros::EnumString;
-use crate::{Read, Write, Error};
+use crate::traits::{Read, Write};
+use crate::error::Error;
 
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
 #[derive(StrumDisplay)]

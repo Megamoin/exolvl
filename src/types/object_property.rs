@@ -1,6 +1,7 @@
 use ordered_float::OrderedFloat;
 
-use crate::{Read, Write, Error};
+use crate::traits::{Read, Write};
+use crate::error::Error;
 use crate::types::vec2::Vec2;
 use crate::types::color::Color;
 use crate::types::sprite::Sprite;
