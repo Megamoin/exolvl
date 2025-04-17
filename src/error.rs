@@ -26,8 +26,12 @@ pub enum Error {
     StrumParse(strum::ParseError),
     /// An error occurred while reading a file.
     FileRead(std::io::Error),
+    #[cfg(feature = "serde")]
     /// An error occurred while serializing with serde.
     SerdeParse(serde_json::Error),
+    /// An error occurred while requesting with reqwest.
+    #[cfg(feature = "request")]
+    InvalidRequest(reqwest::Error),
 }
 
 impl std::fmt::Display for Error {
@@ -48,6 +52,8 @@ impl std::fmt::Display for Error {
             Self::StrumParse(err) => write!(f, "{err}"),
             Self::FileRead(err) => write!(f, "{err}"),
             Self::SerdeParse(err) => write!(f, "{err}"),
+            #[cfg(feature = "request")]
+            Self::InvalidRequest(err) => write!(f, "{err}"),
         }
     }
 }

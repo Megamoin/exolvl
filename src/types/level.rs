@@ -1,4 +1,8 @@
 use std::fs::File;
+use std::io::{BufWriter, Write as _};
+use flate2::write::GzEncoder;
+use flate2::Compression;
+
 use crate::{Read, Write, Error, ReadVersioned};
 use crate::types::{level_data::LevelData, theme::Theme, vec2::Vec2};
 use std::path::Path;
@@ -46,7 +50,7 @@ impl Default for Level {
     fn default() -> Self {
         let level_id = uuid::Uuid::new_v4();
         Self { 
-            serialization_version: 18, 
+            serialization_version: 19,
             level_data: LevelData { 
                 level_id: level_id,
                 level_version: 1,
@@ -70,7 +74,9 @@ impl Default for Level {
                 laps: 1,
                 center_camera: Default::default(),
                 scripts: Default::default(),
+                scripts_folders: Default::default(),
                 nova_scripts: Default::default(),
+                variables_folders: Default::default(),
                 global_variables: Default::default(),
                 theme: Theme::Mountains,
                 custom_background_color: Default::default(),
@@ -100,18 +106,28 @@ impl Default for Level {
 }
 
 impl Level {
-    pub fn read_from_path(path: &Path) -> Result<Self, Error>{
+    pub fn read_from_level_file(path: &Path) -> Result<Self, Error>{
         let file = File::open(path)?;
         let mut file = flate2::read::GzDecoder::new(file);
         Level::read(&mut file)
     }
 
-    pub fn write_to_file(&mut self, path: &Path) -> Result<(), Error>{
+    pub fn write_as_level_file(&mut self, path: &Path) -> Result<(), Error>{
+        
+        // Write self to a buffer
+        let mut buf = vec![];
+        {
+            let mut buf_writer = BufWriter::new(&mut buf);
+            self.write(&mut buf_writer)?;
+            buf_writer.flush()?;
+        }
+
+        // gzip the buffer
         let file = File::create(path)?;
-        // Weirdly enough, this isnt the same compression level as the .Level files normally are, but it still works.
-        let mut gzfile = flate2::write::GzEncoder::new(file, flate2::Compression::best());
-        self.write(&mut gzfile)?;
-        gzfile.finish()?;
+        let mut encoder = GzEncoder::new(file, Compression::default());
+        encoder.write_all(&buf)?;
+        encoder.finish()?;
+
         Ok(())
     }
 

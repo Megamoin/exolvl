@@ -12,25 +12,34 @@ readme = "README.md"
 exclude = [".github/*"]
 
 [dependencies]
-chrono = "0.4"
+chrono = "0.4.40"
 cs-datetime-parse = "1.1.0"
-flate2 = "1.0.33"
-image = { version = "0.25.2", optional = true }
+flate2 = "1.1.1"
+image = { version = "0.25.6", optional = true }
 leb128 = "0.2"
-ordered-float = { version = "4.2.2", features = ["serde"] }
-serde = { version = "1.0", features = ["derive"], optional = true }
-uuid = { version = "1.10.0", features = ["v4", "fast-rng", "macro-diagnostics"]}
-strum = { version = "0.26", features = ["derive"] }
-titlecase = "3.3.0"
-time = "0.3.36"
-glam = "0.29.0"
-serde_json = "1.0.128"
-rand = "0.8.5"
+ordered-float = { version = "5.0.0", features = ["serde"] }
+serde = { version = "1.0.219", features = ["derive"], optional = true }
+uuid = { version = "1.16.0", features = ["v4", "fast-rng", "macro-diagnostics"]}
+strum = { version = "0.27.1", features = ["derive"] }
+strum_macros = "0.27.1"
+titlecase = "3.4.0"
+time = "0.3.41"
+glam = "0.30.1"
+serde_json = "1.0.140"
+rand = "0.9.0"
 hex = "0.4.3"
-openssl = "0.10.66"
+openssl = "0.10.72"
 tracing-forest = { version = "0.1.6", features = ["full"] }
 base64 = "0.22.1"
+reqwest = { version = "0.12.15", features = ["json"], optional = true }
+tokio = { version = "1.44.1", features = ["macros", "rt-multi-thread"], optional = true}
+gpui = { git = "https://github.com/zed-industries/zed" }
+env_logger = "0.11.8"
+unicode-segmentation = "1.12.0"
+proc_macros = { path = "proc_macros" }
 
 [features]
 serde = ["dep:serde", "chrono/serde", "glam/serde", "uuid/serde"]
 image = ["dep:image"]
+request = ["dep:reqwest", "dep:tokio"]
+private-modules = []

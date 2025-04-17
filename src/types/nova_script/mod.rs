@@ -7,8 +7,10 @@ pub mod variable;
 pub mod function_call;
 pub mod static_type;
 pub mod dynamic_type;
+pub mod scripts_folder;
+pub mod variables_folder;
 
-use crate::{Read, Write, Error};
+use crate::{Error, Read, ReadVersioned, Write};
 use {nova_value::NovaValue, activator::Activator, parameter::Parameter, variable::Variable, action::Action};
 
 
@@ -22,12 +24,13 @@ pub struct NovaScript {
     pub condition: NovaValue,
     pub activation_list: Vec<Activator>,
     pub parameters: Vec<Parameter>,
+    // pub variables_folder: Option<Vec<variables_folder::VariablesFolder>>,
     pub variables: Vec<Variable>,
     pub actions: Vec<Action>,
 }
 
-impl Read for NovaScript {
-    fn read(input: &mut impl std::io::Read) -> Result<Self, Error> {
+impl ReadVersioned for NovaScript {
+    fn read(input: &mut impl std::io::Read, version: i32) -> Result<Self, Error> {
         Ok(Self {
             script_id: Read::read(input)?,
             script_name: Read::read(input)?,
@@ -36,8 +39,13 @@ impl Read for NovaScript {
             condition: Read::read(input)?,
             activation_list: Read::read(input)?,
             parameters: Read::read(input)?,
-            variables: Read::read(input)?,
-            actions: Read::read(input)?,
+            // variables_folder: if version >= 19 {
+            //     None // Some(Read::read(input)?)
+            // } else {
+            //     None
+            // },
+            variables: ReadVersioned::read(input, version)?,
+            actions: ReadVersioned::read(input, version)?,
         })
     }
 }
@@ -51,6 +59,9 @@ impl Write for NovaScript {
         self.condition.write(output)?;
         self.activation_list.write(output)?;
         self.parameters.write(output)?;
+        // if let Some(variables_folder) = &self.variables_folder {
+        //     variables_folder.write(output)?;
+        // }
         self.variables.write(output)?;
         self.actions.write(output)
     }

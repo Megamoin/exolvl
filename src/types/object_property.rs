@@ -3,6 +3,7 @@ use ordered_float::OrderedFloat;
 use crate::{Read, Write, Error};
 use crate::types::vec2::Vec2;
 use crate::types::color::Color;
+use crate::types::sprite::Sprite;
 
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
@@ -36,10 +37,10 @@ pub enum ObjectProperty {
     Pattern(i32),
     PatternTiling(Vec2),
     PatternOffset(Vec2),
-    ColliderWithPlayer(bool),
+    CollideWithPlayer(bool),
     Bounce(bool),
     RestoreVelocity(bool),
-    Sprite(String),
+    Sprite(Sprite),
     Trigger(bool),
     Health(OrderedFloat<f32>),    
     DamageFromJump(bool),
@@ -76,7 +77,7 @@ pub enum ObjectProperty {
     EndSizeMultiplier(OrderedFloat<f32>),
     SpeedMin(OrderedFloat<f32>),
     SpeedMax(OrderedFloat<f32>),
-    SpeeLimit(OrderedFloat<f32>),
+    SpeedLimit(OrderedFloat<f32>),
     SpeedDampen(OrderedFloat<f32>),
     RotationMin(OrderedFloat<f32>),
     RotationMax(OrderedFloat<f32>),
@@ -88,7 +89,7 @@ pub enum ObjectProperty {
     AnchorPos(Vec2),
     MoonInnerRadius(OrderedFloat<f32>),
     MoonOffset(OrderedFloat<f32>),
-    
+    Test29(OrderedFloat<f32>),
     
 }
 
@@ -126,6 +127,7 @@ impl Read for ObjectProperty {
             26 => Self::Pattern(Read::read(input)?),
             27 => Self::PatternTiling(Read::read(input)?),
             28 => Self::PatternOffset(Read::read(input)?),
+            29 => Self::Test29(Read::read(input)?),
             32 => Self::BorderThickness(Read::read(input)?),
             34 => Self::RestoreVelocity(Read::read(input)?),
             35 => Self::Sprite(Read::read(input)?),
@@ -165,7 +167,7 @@ impl Read for ObjectProperty {
             69 => Self::EndSizeMultiplier(Read::read(input)?),
             71 => Self::SpeedMin(Read::read(input)?),
             72 => Self::SpeedMax(Read::read(input)?),
-            73 => Self::SpeeLimit(Read::read(input)?),
+            73 => Self::SpeedLimit(Read::read(input)?),
             74 => Self::SpeedDampen(Read::read(input)?),
             75 => Self::RotationMin(Read::read(input)?),
             76 => Self::RotationMax(Read::read(input)?),
@@ -301,7 +303,7 @@ impl Write for ObjectProperty {
                 28.write(output)?;
                 value.write(output)
             }
-            Self::ColliderWithPlayer(value) => {
+            Self::CollideWithPlayer(value) => {
                 30.write(output)?;
                 value.write(output)
             }
@@ -461,7 +463,7 @@ impl Write for ObjectProperty {
                 72.write(output)?;
                 value.write(output)
             }
-            Self::SpeeLimit(value) => {
+            Self::SpeedLimit(value) => {
                 73.write(output)?;
                 value.write(output)
             }
@@ -509,6 +511,10 @@ impl Write for ObjectProperty {
                 84.write(output)?;
                 value.write(output)
             }
+            Self::Test29(value) => {
+                29.write(output)?;
+                value.write(output)
+            }
         }
     }
 }
@@ -518,3 +524,5 @@ impl Default for ObjectProperty {
         Self::Color(Default::default())
     }
 }
+
+impl ObjectProperty {}

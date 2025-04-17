@@ -12,17 +12,23 @@
 pub mod error;
 mod private;
 pub mod traits;
-pub mod encrypt;
 pub mod types;
 pub mod geometrize;
 pub mod primitive_impls;
+
+// ! These modules are only included when the "private-modules" feature is enabled
+#[cfg(feature = "private-modules")]
+pub mod encrypt;
+#[cfg(feature = "private-modules")]
+pub mod request;
+#[cfg(feature = "private-modules")]
+pub mod gui;
 
 use error::Error;
 #[cfg(feature = "image")]
 pub use traits::{Read, ReadContext, ReadVersioned, Write};
 use uuid::Uuid;
 use glam::IVec2;
-
 
 impl Read for IVec2 {
     fn read(input: &mut impl std::io::Read) -> Result<Self, Error> {

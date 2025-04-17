@@ -1,4 +1,4 @@
-use crate::{Read, Write, Error, ReadContext};
+use crate::{Error, Read, ReadContext, ReadVersioned, Write};
 use super::action_type::ActionType;
 
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
@@ -9,14 +9,14 @@ pub struct Action {
     pub action_type: ActionType,
 }
 
-impl Read for Action {
-    fn read(input: &mut impl std::io::Read) -> Result<Self, Error> {
+impl ReadVersioned for Action {
+    fn read(input: &mut impl std::io::Read, version: i32) -> Result<Self, Error> {
         let action_type = Read::read(input)?;
 
         Ok(Self {
             closed: Read::read(input)?,
             wait: Read::read(input)?,
-            action_type: ReadContext::read_ctx(input, action_type)?,
+            action_type: ReadContext::read_ctx(input, action_type, version)?,
         })
     }
 }

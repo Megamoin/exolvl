@@ -1,10 +1,11 @@
 use crate::{Read, Write, Error};
-
+use strum_macros::EnumIter;
+use strum::EnumString;
 
 macro_rules! define_object_id {
     ($($name:ident = $number:expr),*) => {
         #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-        #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
+        #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord, EnumIter, EnumString, strum::Display)]
         pub enum ObjectId {
             $($name = $number),*
         }

@@ -1,6 +1,8 @@
-use std::fs::File;
+use std::{fs::File, io::{BufWriter, Write as _}};
+use flate2::{write::GzEncoder, Compression};
+
 use crate::{Read, Write, Error, ReadVersioned};
-use super::image::Image;
+use super::{image::Image, layer::Layer, level::Level};
 use crate::types::{local_level::LocalLevel, level_data::LevelData, author_replay::AuthorReplay, theme::Theme, vec2::Vec2};
 use std::path::Path;
 
@@ -50,9 +52,10 @@ impl Write for Exolvl {
 impl Default for Exolvl {
     fn default() -> Self {
         let level_id = uuid::Uuid::new_v4();
+        let first_layer = Layer::default();
         Self { 
             local_level: LocalLevel { 
-                serialization_version: 18, 
+                serialization_version: 19,
                 level_id: level_id.clone(),
                 level_version: 1,
                 level_name: "".to_string(),
@@ -68,7 +71,7 @@ impl Default for Exolvl {
                 nova_level: true,
             }, 
             level_data: LevelData { 
-                level_id: level_id,
+                level_id,
                 level_version: 1,
                 nova_level: true,
                 under_decoration_tiles: Default::default(),
@@ -78,7 +81,7 @@ impl Default for Exolvl {
                 object_tiles: Default::default(),
                 foreground_decoration_tiles: Default::default(),
                 objects: Default::default(),
-                layers: Default::default(),
+                layers: vec![first_layer],
                 prefabs: Default::default(),
                 brushes: Default::default(),
                 patterns: Default::default(),
@@ -90,7 +93,9 @@ impl Default for Exolvl {
                 laps: 1,
                 center_camera: Default::default(),
                 scripts: Default::default(),
+                scripts_folders: Default::default(),
                 nova_scripts: Default::default(),
+                variables_folders: Default::default(),
                 global_variables: Default::default(),
                 theme: Theme::Mountains,
                 custom_background_color: Default::default(),
@@ -121,23 +126,35 @@ impl Default for Exolvl {
 }
 
 impl Exolvl {
-    pub fn read_from_path(path: &Path) -> Result<Self, Error>{
+    pub fn read_from_exolvl_file(path: &Path) -> Result<Self, Error>{
         let file = File::open(path)?;
-        let mut file = flate2::read::GzDecoder::new(file);
+        let buf_file = std::io::BufReader::new(file); // Add buffering here
+        let mut file = flate2::read::GzDecoder::new(buf_file);
         Exolvl::read(&mut file)
     }
 
-    pub fn write_to_file(&mut self, path: &Path) -> Result<(), Error>{
+    pub fn write_as_exolvl_file(&mut self, path: &Path) -> Result<(), Error>{
+        
+        // Write self to a buffer
+        let mut buf = vec![];
+        {
+            let mut buf_writer = BufWriter::new(&mut buf);
+            self.write(&mut buf_writer)?;
+            buf_writer.flush()?;
+        }
+
+        // gzip the buffer
         let file = File::create(path)?;
-        // Weirdly enough, this isnt the same compression level as the .exolvl files normally are, but it still works.
-        let mut gzfile = flate2::write::GzEncoder::new(file, flate2::Compression::best());
-        self.write(&mut gzfile)?;
-        gzfile.finish()?;
+        let buf_file = BufWriter::new(file); // <-- Add buffering here
+        let mut encoder = GzEncoder::new(buf_file, Compression::default());
+        encoder.write_all(&buf)?;
+        encoder.finish()?; // This will flush the BufWriter as well
+
         Ok(())
     }
 
     #[cfg(feature = "serde")]
-    pub fn save_as_json_to_file(&self, dir: &Path) -> Result<File, serde_json::Error> {
+    pub fn save_as_json_to_file(&self, dir: &Path) -> Result<File, Error> {
         let mut new_file = File::create(dir.join(format!("{}.exolvl.json", self.local_level.level_name.clone()))).unwrap();
         std::io::Write::write_all(
             &mut new_file, 
@@ -159,5 +176,28 @@ impl Exolvl {
         let img: Image = image::open(path_to_image)?.into();
         self.level_data.patterns.push(vec![img].into());
         Ok(())
+    }
+
+    pub fn from_level(level: Level, name: &str, thumbnail: &str) -> Self {
+        Self { 
+            local_level: LocalLevel { 
+                serialization_version: level.serialization_version, 
+                level_id: level.level_data.level_id, 
+                level_version: level.level_data.level_version, 
+                level_name: name.to_string(), 
+                thumbnail: thumbnail.to_string(),
+                creation_date: chrono::Utc::now(),
+                update_date: chrono::Utc::now(), 
+                author_time: level.level_data.author_time, 
+                author_lap_times: level.level_data.author_lap_times.clone(),
+                silver_medal_time: level.level_data.silver_medal_time, 
+                gold_medal_time: level.level_data.gold_medal_time, 
+                laps: level.level_data.laps, 
+                private: true, 
+                nova_level: level.level_data.nova_level
+            }, 
+            level_data: level.level_data, 
+            author_replay: AuthorReplay(vec![]) 
+        }
     }
 }

@@ -18,8 +18,8 @@ pub struct Vec2 {
 impl Read for Vec2 {
     fn read(input: &mut impl std::io::Read) -> Result<Self, Error> {
         Ok(Self {
-            y: Read::read(input)?,
             x: Read::read(input)?,
+            y: Read::read(input)?,
         })
     }
 }

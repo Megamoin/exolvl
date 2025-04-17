@@ -1,4 +1,4 @@
-use super::{object_property::ObjectProperty, vec2::Vec2};
+use super::vec2::Vec2;
 use crate::{error::Error, Read, Write};
 use ordered_float::OrderedFloat;
 
@@ -35,11 +35,11 @@ impl Write for Brush {
 }
 
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[derive(Clone, Debug, Default, Hash, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Clone, Copy, Debug, Default, Hash, PartialEq, Eq, PartialOrd, Ord)]
 #[allow(clippy::module_name_repetitions)]
 pub struct BrushObject {
-    pub entity_id: i32,
-    pub properties: Vec<ObjectProperty>,
+    pub shape: i32,
+    pub custom_shape: i32,
     pub weight: OrderedFloat<f32>,
     pub scale: OrderedFloat<f32>,
     pub rotation: OrderedFloat<f32>,
@@ -50,8 +50,8 @@ pub struct BrushObject {
 impl Read for BrushObject {
     fn read(input: &mut impl std::io::Read) -> Result<Self, Error> {
         Ok(Self {
-            entity_id: Read::read(input)?,
-            properties: Read::read(input)?,
+            shape: Read::read(input)?,
+            custom_shape: Read::read(input)?,
             weight: Read::read(input)?,
             scale: Read::read(input)?,
             rotation: Read::read(input)?,
@@ -63,8 +63,8 @@ impl Read for BrushObject {
 
 impl Write for BrushObject {
     fn write(&self, output: &mut impl std::io::Write) -> Result<(), Error> {
-        self.entity_id.write(output)?;
-        self.properties.write(output)?;
+        self.shape.write(output)?;
+        self.custom_shape.write(output)?;
         self.weight.write(output)?;
         self.scale.write(output)?;
         self.rotation.write(output)?;

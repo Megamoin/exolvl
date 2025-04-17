@@ -1,5 +1,10 @@
 /target
-.DS_Store
 src/main.rs
+.DS_Store
 .vscode/settings.json
+.idea
 src/encrypt.rs
+src/request.rs
+src/gui.rs
+src/geometrize.rs
+proc_macros

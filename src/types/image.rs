@@ -1,8 +1,9 @@
-use std::io::Write as _;
+use std::{io::Write as _, path::Path};
 
 use crate::{error::Error, Read, Write};
+use image::ImageReader;
 #[cfg(feature = "image")]
-use image::{DynamicImage, ImageFormat, RgbaImage};
+use image::{DynamicImage, RgbaImage};
 use base64::{prelude::BASE64_STANDARD, Engine};
 use serde::{de::Visitor, Serialize};
 
@@ -20,10 +21,9 @@ impl Serialize for Image {
             let mut image_data: Vec<u8> = Vec::new();
             self.0.write_to(&mut std::io::Cursor::new(&mut image_data), image::ImageFormat::Png).unwrap();
             let mut enc = base64::write::EncoderWriter::new(&mut wrapped_writer, &BASE64_STANDARD);
-            // handle errors as you normally would
+
             enc.write_all(&image_data).unwrap();
-            // could leave this out to be called by Drop, if you don't care
-            // about handling errors
+
             enc.finish().unwrap();
 
         }
@@ -124,10 +124,11 @@ impl Read for DynamicImage {
 #[cfg(feature = "image")]
 impl Write for DynamicImage {
     fn write(&self, output: &mut impl std::io::Write) -> Result<(), Error> {
-        let mut vec = std::io::Cursor::new(Vec::new());
-        self.write_to(&mut vec, ImageFormat::Png)?;
+        let mut buffer = Vec::new();
 
-        output.write_all(&vec.into_inner())?;
+        self.write_to(&mut std::io::Cursor::new(&mut buffer), image::ImageFormat::Png)?;
+
+        buffer.write(output)?;
 
         Ok(())
     }
@@ -147,10 +148,11 @@ impl Read for RgbaImage {
 #[cfg(feature = "image")]
 impl Write for RgbaImage {
     fn write(&self, output: &mut impl std::io::Write) -> Result<(), Error> {
-        let mut vec = std::io::Cursor::new(Vec::new());
-        self.write_to(&mut vec, ImageFormat::Png)?;
+        let mut buffer = Vec::new();
 
-        output.write_all(&vec.into_inner())?;
+        self.write_to(&mut std::io::Cursor::new(&mut buffer), image::ImageFormat::Png)?;
+
+        buffer.write(output)?;
 
         Ok(())
     }
@@ -160,5 +162,27 @@ impl Write for RgbaImage {
 impl From<DynamicImage> for Image {
     fn from(value: DynamicImage) -> Self {
         Self(value.into())
+    }
+}
+
+#[cfg(feature = "image")]
+impl Image {
+    pub fn to_base64_string(&self) -> String {
+        let mut wrapped_writer = vec![];
+        {
+            let mut image_data: Vec<u8> = Vec::new();
+            self.0.write_to(&mut std::io::Cursor::new(&mut image_data), image::ImageFormat::Png).unwrap();
+            let mut enc = base64::write::EncoderWriter::new(&mut wrapped_writer, &BASE64_STANDARD);
+            
+            enc.write_all(&image_data).unwrap();
+            
+            enc.finish().unwrap();
+
+        }
+        String::from_utf8(wrapped_writer).unwrap()
+    }
+
+    pub fn read_from_file(path: &Path) -> Self {
+        ImageReader::open(path).unwrap().decode().unwrap().into()
     }
 }

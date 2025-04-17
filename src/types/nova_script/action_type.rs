@@ -1,4 +1,4 @@
-use crate::{Read, Write, Error, ReadContext};
+use crate::{Error, Read, ReadContext, ReadVersioned, Write};
 use super::{action::Action, nova_value::NovaValue, function_call::FunctionCall};
 
 
@@ -54,14 +54,14 @@ pub enum ActionType {
         duration: NovaValue,
         easing: NovaValue,
     },
-    SetVariable {
+    VariableSet {
         variable: i32,
         value: Option<NovaValue>,
     },
-    ResetVariable {
+    VariableReset {
         variable: i32,
     },
-    ResetObject {
+    ObjectReset {
         target_objects: NovaValue,
     },
     SetColor {
@@ -159,6 +159,11 @@ pub enum ActionType {
         fade_out: NovaValue,
         duration: NovaValue,
     },
+    PlaySoundDeprecated {
+        sound: NovaValue,
+        volume: NovaValue,
+        pitch: NovaValue
+    },
     PlaySound {
         sound: NovaValue,
         volume: NovaValue,
@@ -224,15 +229,15 @@ pub enum ActionType {
     RunFunction {
         function: FunctionCall,
     },
-    SetVariableOverTime {
+    VariableSetOverTime {
         variable: i32,
         value: Option<NovaValue>,
         duration: NovaValue,
         easing: NovaValue,
     },
     RepeatForEachObject {
-        target_objects: NovaValue,
         actions: Vec<Action>,
+        target_objects: NovaValue,
     },
     StopSound {
         sound_instance: NovaValue, 
@@ -244,6 +249,14 @@ pub enum ActionType {
     StopParticleSystem {
         target_objects: NovaValue, 
         clear: NovaValue
+    },
+    ObjectCreate {
+        prefab: NovaValue,
+        position: NovaValue,
+        foreground: NovaValue,
+    },
+    ObjectDelete {
+        target_objects: NovaValue,
     },
 }
 
@@ -259,9 +272,9 @@ impl From<&ActionType> for i32 {
             ActionType::Scale { .. } => 6,
             ActionType::Rotate { .. } => 7,
             ActionType::RotateAround { .. } => 8,
-            ActionType::SetVariable { .. } => 9,
-            ActionType::ResetVariable { .. } => 10,
-            ActionType::ResetObject { .. } => 11,
+            ActionType::VariableSet { .. } => 9,
+            ActionType::VariableReset { .. } => 10,
+            ActionType::ObjectReset { .. } => 11,
             ActionType::SetColor { .. } => 12,
             ActionType::SetTransparency { .. } => 13,
             ActionType::SetSecondaryColor { .. } => 14,
@@ -284,6 +297,7 @@ impl From<&ActionType> for i32 {
             ActionType::CameraOffsetReset { .. } => 31,
             ActionType::CameraShake { .. } => 32,
             ActionType::PlaySound { .. } => 33,
+            ActionType::PlaySoundDeprecated { .. } => 33,
             ActionType::PlayMusic { .. } => 34,
             ActionType::SetDirection { .. } => 35,
             ActionType::SetGravity { .. } => 36,
@@ -298,11 +312,13 @@ impl From<&ActionType> for i32 {
             ActionType::TransitionOut { .. } => 45,
             ActionType::TimeScale { .. } => 46,
             ActionType::RunFunction { .. } => 47,
-            ActionType::SetVariableOverTime { .. } => 48,
+            ActionType::VariableSetOverTime { .. } => 48,
             ActionType::RepeatForEachObject { .. } => 49,
             ActionType::StopSound { .. } => 50,
             ActionType::PlayParticleSystem { .. } => 51,
             ActionType::StopParticleSystem { .. } => 52,
+            ActionType::ObjectCreate { .. } => 53,
+            ActionType::ObjectDelete { .. } => 54,
         }
     }
 }
@@ -310,19 +326,19 @@ impl From<&ActionType> for i32 {
 impl ReadContext for ActionType {
     type Context = i32;
 
-    fn read_ctx(input: &mut impl std::io::Read, with: Self::Context) -> Result<Self, Error> {
+    fn read_ctx(input: &mut impl std::io::Read, with: Self::Context, version: i32) -> Result<Self, Error> {        
         Ok(match with {
             0 => Self::Repeat {
-                actions: Read::read(input)?,
+                actions: ReadVersioned::read(input, version)?,
                 count: Read::read(input)?,
             },
             1 => Self::RepeatWhile {
-                actions: Read::read(input)?,
+                actions: ReadVersioned::read(input, version)?,
                 condition: Read::read(input)?,
             },
             2 => Self::ConditionBlock {
-                if_actions: Read::read(input)?,
-                else_actions: Read::read(input)?,
+                if_actions: ReadVersioned::read(input, version)?,
+                else_actions: ReadVersioned::read(input, version)?,
                 condition: Read::read(input)?,
             },
             3 => Self::Wait {
@@ -361,14 +377,14 @@ impl ReadContext for ActionType {
                 duration: Read::read(input)?,
                 easing: Read::read(input)?,
             },
-            9 => Self::SetVariable {
+            9 => Self::VariableSet {
                 variable: Read::read(input)?,
                 value: Read::read(input)?,
             },
-            10 => Self::ResetVariable {
+            10 => Self::VariableReset {
                 variable: Read::read(input)?,
             },
-            11 => Self::ResetObject {
+            11 => Self::ObjectReset {
                 target_objects: Read::read(input)?,
             },
             12 => Self::SetColor {
@@ -466,12 +482,23 @@ impl ReadContext for ActionType {
                 fade_out: Read::read(input)?,
                 duration: Read::read(input)?,
             },
-            33 => Self::PlaySound {
-                sound: Read::read(input)?,
-                volume: Read::read(input)?,
-                pitch: Read::read(input)?,
-                do_loop: Read::read(input)?,
-                fade_in: Read::read(input)?,
+            33 => {
+                if version >= 16 {
+                    Self::PlaySound {
+                        sound: Read::read(input)?,
+                        volume: Read::read(input)?,
+                        pitch: Read::read(input)?,
+                        do_loop: Read::read(input)?,
+                        fade_in: Read::read(input)?,
+                    }
+                }
+                else {
+                    Self::PlaySoundDeprecated {
+                        sound: Read::read(input)?,
+                        volume: Read::read(input)?,
+                        pitch: Read::read(input)?,
+                    }
+                } 
             },
             34 => Self::PlayMusic {
                 music: Read::read(input)?,
@@ -531,15 +558,15 @@ impl ReadContext for ActionType {
             47 => Self::RunFunction {
                 function: Read::read(input)?,
             },
-            48 => Self::SetVariableOverTime {
+            48 => Self::VariableSetOverTime {
                 variable: Read::read(input)?,
                 value: Read::read(input)?,
                 duration: Read::read(input)?,
                 easing: Read::read(input)?,
             },
             49 => Self::RepeatForEachObject {
+                actions: ReadVersioned::read(input, version)?,
                 target_objects: Read::read(input)?,
-                actions: Read::read(input)?,
             },
             50 => Self::StopSound { 
                 sound_instance: Read::read(input)?,
@@ -551,6 +578,14 @@ impl ReadContext for ActionType {
             52 => Self::StopParticleSystem { 
                 target_objects: Read::read(input)?,
                 clear: Read::read(input)?,
+            },
+            53 => Self::ObjectCreate {
+                prefab: Read::read(input)?,
+                position: Read::read(input)?,
+                foreground: Read::read(input)?,
+            },
+            54 => Self::ObjectDelete {
+                target_objects: Read::read(input)?,
             },
             
             n => return Err(Error::InvalidActionType(n)),
@@ -636,12 +671,12 @@ impl Write for ActionType {
                 duration.write(output)?;
                 easing.write(output)
             }
-            Self::SetVariable { variable, value } => {
+            Self::VariableSet { variable, value } => {
                 variable.write(output)?;
                 value.write(output)
             }
-            Self::ResetVariable { variable } => variable.write(output),
-            Self::ResetObject { target_objects }
+            Self::VariableReset { variable } => variable.write(output),
+            Self::ObjectReset { target_objects }
             | Self::Activate { target_objects }
             | Self::Deactivate { target_objects }
             | Self::Kill { target_objects } => target_objects.write(output),
@@ -805,6 +840,15 @@ impl Write for ActionType {
                 do_loop.write(output)?;
                 fade_in.write(output)
             }
+            Self::PlaySoundDeprecated {
+                sound,
+                volume,
+                pitch,
+            } => {
+                sound.write(output)?;
+                volume.write(output)?;
+                pitch.write(output)
+            }
             Self::PlayMusic {
                 music,
                 volume,
@@ -884,7 +928,7 @@ impl Write for ActionType {
                 easing.write(output)
             }
             Self::RunFunction { function } => function.write(output),
-            Self::SetVariableOverTime {
+            Self::VariableSetOverTime {
                 variable,
                 value,
                 duration,
@@ -896,11 +940,11 @@ impl Write for ActionType {
                 easing.write(output)
             }
             Self::RepeatForEachObject {
-                target_objects,
                 actions,
+                target_objects,
             } => {
-                target_objects.write(output)?;
-                actions.write(output)
+                actions.write(output)?;
+                target_objects.write(output)
             }
             Self::StopSound { 
                 sound_instance,
@@ -920,6 +964,18 @@ impl Write for ActionType {
             } => {
                 target_objects.write(output)?;
                 clear.write(output)
+            }
+            Self::ObjectCreate { 
+                prefab, 
+                position, 
+                foreground 
+            } => {
+                prefab.write(output)?;
+                position.write(output)?;
+                foreground.write(output)
+            }
+            Self::ObjectDelete { target_objects } => {
+                target_objects.write(output)
             }
         }
     }

@@ -11,7 +11,7 @@ use crate::types::{
     nova_script::{
         action::Action, activator::Activator, nova_value::NovaValue, parameter::Parameter,
         static_type::StaticType, variable::Variable, NovaScript, function_call::{CallParameter, FunctionCall},
-        dynamic_type::DynamicType, action_type::ActionType,
+        dynamic_type::DynamicType, action_type::ActionType, scripts_folder::ScriptsFolder, variables_folder::VariablesFolder,
     },
     object::Object,
     object_property::ObjectProperty,
@@ -23,6 +23,7 @@ use crate::types::{
     varint::Varint,
     vec2::Vec2,
     object_id::ObjectId,
+    sprite::{Skin, Sprite},
 };
 use chrono::{DateTime, Utc};
 #[cfg(feature = "image")]
@@ -91,7 +92,11 @@ impl_sealed!(
     ObjectTile,
     ObjectTileProperty,
     SimpleTile,
-    glam::Vec2
+    glam::Vec2,
+    Sprite,
+    Skin,
+    ScriptsFolder,
+    VariablesFolder
 );
 
 #[cfg(feature = "image")]

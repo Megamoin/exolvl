@@ -2,7 +2,7 @@ use crate::{Read, Write, Error, Uuid, ReadVersioned};
 use crate::types::pattern::Pattern;
 use crate::types::prefab::Prefab;
 use crate::types::layer::Layer;
-use crate::types::{object::Object, brush::Brush, color::Color, nova_script::NovaScript, nova_script::variable::Variable, theme::Theme, old_editor_types::simple_tile::SimpleTile, old_editor_types::object_tile::ObjectTile};
+use crate::types::{object::Object, brush::Brush, color::Color, nova_script::{NovaScript, variable::Variable, scripts_folder::ScriptsFolder, variables_folder::VariablesFolder}, theme::Theme, old_editor_types::simple_tile::SimpleTile, old_editor_types::object_tile::ObjectTile};
 use crate::types::vec2::Vec2;
 use ordered_float::OrderedFloat;
 
@@ -63,10 +63,14 @@ pub struct LevelData {
     ///
     /// These are used in the legacy level editor.
     pub scripts: Vec<i32>,
+    /// The script folders in the level.
+    pub scripts_folders: Option<Vec<ScriptsFolder>>,
     /// The "new" scripts in the level.
     ///
     /// These are the scripts that are used in the new level editor. As opposed to the `scripts` field which is for the legacy editor.
     pub nova_scripts: Vec<NovaScript>,
+    /// The variables folders in the level.
+    pub variables_folders: Option<Vec<VariablesFolder>>,
     /// All the global variables in the level.
     pub global_variables: Vec<Variable>,
     /// The theme name of the level.
@@ -152,8 +156,18 @@ impl ReadVersioned for LevelData {
             laps: Read::read(input)?,
             center_camera: Read::read(input)?,
             scripts: Read::read(input)?,
-            nova_scripts: Read::read(input)?,
-            global_variables: Read::read(input)?,
+            scripts_folders: if version >= 19 {
+                Some(Read::read(input)?)
+            } else {
+                None
+            },
+            nova_scripts: ReadVersioned::read(input, version)?,
+            variables_folders: if version >= 19 {
+                Some(Read::read(input)?)
+            } else {
+                None
+            },
+            global_variables: ReadVersioned::read(input, version)?,
             theme: Read::read(input)?,
             custom_background_color: Read::read(input)?,
             unknown1: Read::read(input)?,
@@ -206,7 +220,13 @@ impl Write for LevelData {
         self.laps.write(output)?;
         self.center_camera.write(output)?;
         self.scripts.write(output)?;
+        if let Some(scripts_folders) = &self.scripts_folders {
+            scripts_folders.write(output)?;
+        }
         self.nova_scripts.write(output)?;
+        if let Some(variables_folders) = &self.variables_folders {
+            variables_folders.write(output)?;
+        }
         self.global_variables.write(output)?;
         self.theme.write(output)?;
         self.custom_background_color.write(output)?;
@@ -235,22 +255,30 @@ impl Write for LevelData {
 
 impl LevelData {
     /// adds an Object to the level data of a new level, and adds it to the Layer with the given layer id
-    /// the object's entity id will be changed to 1 plus the highest current entity id in the objects set
+    /// the object's entity id will be changed to 1 plus the highest current entity id in the LevelData's object set
     pub fn add_object(&mut self, mut obj: Object, layer_id: i32) -> (){
         if !self.nova_level {
             panic!("Tried to add an object when the levelData belongs to a legacy level")
         }
         
         // set the entityId of the object to one that is unique
-        let largest_entity_id = match self.objects.iter().map(|x| x.entity_id).min() {
-            Some(id) => id,
+        let largest_entity_id = match self.objects.iter().map(|x| x.entity_id).max() {
+            Some(id) => id + 1,
             None => 1
         };
         obj.entity_id = largest_entity_id;
 
         match self.layers.iter_mut().find(|x| x.layer_id == layer_id) {
-            None => self.layers.get_mut(0).unwrap().children.push(obj.entity_id),
-            Some( ly ) => ly.children.push(obj.entity_id),
+            None => {
+                let layer = self.layers.get_mut(0).unwrap();
+                layer.children.push(obj.entity_id);
+                obj.in_layer = layer.layer_id;
+
+            },
+            Some( ly ) => {
+                ly.children.push(obj.entity_id);
+                obj.in_layer = ly.layer_id;
+            },
         };
 
         self.objects.push(obj);

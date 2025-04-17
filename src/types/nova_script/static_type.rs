@@ -45,7 +45,15 @@ define_static_type!(
     Easing = 11,
     Sprite = 12,
     Script = 13,
-    Layer = 14
+    Layer = 14,
+    Prefab = 15,
+    BoolList = 16,
+    IntList = 17,
+    FloatList = 18,
+    StringList = 19,
+    ColorList = 20,
+    VectorList = 21,
+    PrefabList = 22
 );
 
 impl Read for StaticType {

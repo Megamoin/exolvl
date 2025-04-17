@@ -1,4 +1,4 @@
-use crate::{error::Error, types::varint::Varint, Read, Write};
+use crate::{error::Error, types::varint::Varint, Read, ReadVersioned, Write};
 use cs_datetime_parse::DateTimeCs;
 use ordered_float::OrderedFloat;
 use uuid::Uuid;
@@ -123,6 +123,27 @@ impl<T: Read> Read for Vec<T> {
         Ok(vec)
     }
 }
+
+impl<T: ReadVersioned> ReadVersioned for Vec<T> {
+    //    #[cfg_attr(
+    //        feature = "tracing",
+    //        tracing::instrument(level = "debug", name = "Vec::read", skip(input))
+    //    )]
+        fn read(input: &mut impl std::io::Read, version: i32) -> Result<Self, Error> {
+            let len = usize::try_from(i32::read(input)?).unwrap();
+    
+    //        #[cfg(feature = "tracing")]
+    //        debug!(?len);
+    
+            let mut vec = Self::with_capacity(len);
+    
+            for _ in 0..len {
+                vec.push(ReadVersioned::read(input, version)?);
+            }
+    
+            Ok(vec)
+        }
+    }
 
 impl<T: Write> Write for Vec<T> {
     fn write(&self, output: &mut impl std::io::Write) -> Result<(), Error> {

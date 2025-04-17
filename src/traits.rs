@@ -56,7 +56,7 @@ pub trait ReadContext: private::Sealed {
     /// # Errors
     ///
     /// Returns an error if the underlying reader returns an error.
-    fn read_ctx(input: &mut impl std::io::Read, with: Self::Context) -> Result<Self, Error>
+    fn read_ctx(input: &mut impl std::io::Read, with: Self::Context, version: i32) -> Result<Self, Error>
     where
         Self: Sized;
 }

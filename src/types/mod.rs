@@ -18,3 +18,4 @@ pub mod image;
 pub mod old_script;
 pub mod old_editor_types;
 pub mod level;
+pub mod sprite;
