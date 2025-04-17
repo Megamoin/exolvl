@@ -1,4 +1,3 @@
-use crate::types::layer::Layer;
 use crate::types::object_id::ObjectId;
 use crate::types::theme::Theme;
 use crate::types::vec2::Vec2;
@@ -57,7 +56,7 @@ fn convert(
         None => Exolvl::default(),
     };
 
-    level.level_data.layers.push(Layer::default());
+    // level.level_data.layers.push(Layer::default());
 
     process_image(&mut level, shapes_collection)?;
 
@@ -444,6 +443,6 @@ fn update_level_properties(level: &mut Exolvl, level_name: &str) {
 }
 
 fn write_level(level: &mut Exolvl) -> Result<(), Box<dyn Error>> {    
-    Exolvl::write_to_file(level, Path::new("/Users/florian/Desktop/Shape_Test.exolvl"))?;
+    Exolvl::write_as_exolvl_file(level, Path::new("/Users/florian/Desktop/Shape_Test.exolvl"))?;
     Ok(())
 }
