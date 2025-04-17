@@ -8,3 +8,4 @@ src/request.rs
 src/gui.rs
 src/geometrize.rs
 proc_macros
+test_stuff
