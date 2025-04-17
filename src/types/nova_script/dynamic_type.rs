@@ -26,6 +26,12 @@ macro_rules! define_dynamic_type {
                 }
             }
         }
+
+        impl Default for DynamicType {
+            fn default() -> Self {
+                Self::BoolConstant
+            }
+        }
     };
 }
 

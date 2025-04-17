@@ -1,3 +1,5 @@
+use std::default;
+
 use crate::{Error, Read, Write};
 use crate::types::vec2::Vec2;
 use crate::types::color::Color;
@@ -5,7 +7,7 @@ use super::dynamic_type::DynamicType;
 use ordered_float::OrderedFloat;
 
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[derive(Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Default)]
 pub struct NovaValue {
     pub dynamic_type: DynamicType,
 
@@ -64,3 +66,4 @@ impl Write for NovaValue {
         self.sub_values.write(output)
     }
 }
+
